@@ -1,0 +1,116 @@
+# Prompty
+
+A locally-runnable AI prompt generator with secure API key management.
+
+## Features
+
+- Generate AI prompts for various models (OpenAI, Anthropic, HuggingFace, Novita, OpenRouter)
+- Local storage of API keys (never sent to any server)
+- Customizable prompt categories and parameters
+- Prompt history management
+- Batch prompt generation
+- Works completely offline (except for API calls to model providers)
+- No user accounts or authentication needed
+
+## How It Works
+
+1. **Add your API keys** - Enter your API keys for the services you want to use
+2. **Choose your model** - Select from various AI models
+3. **Configure your prompt** - Set categories, styles, and parameters
+4. **Generate** - Create prompts with a single click
+5. **View history** - Access all your previously generated prompts
+
+All data is stored locally in your browser - your API keys never leave your computer.
+
+## Setup and Installation
+
+### Prerequisites
+
+- Node.js 18+ and npm
+
+### Installation
+
+1. Clone this repository:
+```bash
+git clone https://github.com/sapochat/prompty.git
+cd prompty
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Create a `.env` file (optional - you can add API keys through the UI later):
+```bash
+cp .env.example .env
+```
+
+### Running the App
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+The application will be available at http://localhost:8080
+
+## Configuration
+
+### Using API Keys
+
+You can:
+1. Add API keys directly in the `.env` file before starting the app
+2. Add API keys through the application's settings menu (gear icon in the header)
+
+All keys are stored securely in your browser's localStorage and are never sent to any external server.
+
+## Supported Models
+
+Prompty supports multiple AI providers:
+
+- **OpenAI**: GPT-4, GPT-3.5-Turbo
+- **Anthropic**: Claude 3 Opus, Claude 3 Sonnet, Claude 3 Haiku
+- **HuggingFace**: Various open models
+- **Novita**: AI image generation prompts
+- **OpenRouter**: Access to multiple models through one API
+
+## Development
+
+### Project Structure
+
+- `/src` - Application source code
+  - `/components` - React components
+  - `/hooks` - Custom React hooks
+  - `/pages` - Page components
+  - `/services` - API services and data handling
+  - `/utils` - Utility functions
+  - `/types` - TypeScript type definitions
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+This will create a `dist` directory with the compiled application.
+
+## Deployment
+
+### Local Deployment
+
+You can build the app and serve it locally:
+
+```bash
+npm run build
+npm run preview
+```
+
+### Web Deployment
+
+You can deploy the built application to any static hosting service like Netlify, Vercel, GitHub Pages, etc.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

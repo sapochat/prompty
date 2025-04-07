@@ -1,0 +1,7 @@
+0000000000000000000000000000000000000000 e0c253e2e3f8d0f8ed62b03e073089b53623ca51 Santiago Pochat <spochat@spochat-mn6246.linkedin.biz> 1744061632 -0700	clone: from https://github.com/sapochat/prompty-1
+e0c253e2e3f8d0f8ed62b03e073089b53623ca51 7e843f9c2d2788ee5282da612895d5be7a413c24 Santiago Pochat <spochat@spochat-mn6246.linkedin.biz> 1744064343 -0700	commit: Initial commit of Prompty
+7e843f9c2d2788ee5282da612895d5be7a413c24 e667c41d83c12dc6a3d7389a501fcb3bdd47b7e7 Santiago Pochat <spochat@spochat-mn6246.linkedin.biz> 1744064414 -0700	commit: Update repository URL in README
+e667c41d83c12dc6a3d7389a501fcb3bdd47b7e7 0000000000000000000000000000000000000000 Santiago Pochat <spochat@spochat-mn6246.linkedin.biz> 1744064454 -0700	Branch: renamed refs/heads/main to refs/heads/main
+e667c41d83c12dc6a3d7389a501fcb3bdd47b7e7 e667c41d83c12dc6a3d7389a501fcb3bdd47b7e7 Santiago Pochat <spochat@spochat-mn6246.linkedin.biz> 1744064454 -0700	Branch: renamed refs/heads/main to refs/heads/main
+e667c41d83c12dc6a3d7389a501fcb3bdd47b7e7 181602b5809c675bbc19bda8ec76d3ac3c74f575 Santiago Pochat <spochat@spochat-mn6246.linkedin.biz> 1744064535 -0700	commit: Update repository URL in README
+181602b5809c675bbc19bda8ec76d3ac3c74f575 e5151d20f1152bb1cf0d1657c024834ca17ccd9b Santiago Pochat <spochat@spochat-mn6246.linkedin.biz> 1744065337 -0700	commit: Remove Supabase dependencies and update to use direct API calls
