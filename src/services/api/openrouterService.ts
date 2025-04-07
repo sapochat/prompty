@@ -1,7 +1,6 @@
 import { ApiResponse, PromptConfig } from '@/types/prompt';
 import { v4 as uuidv4 } from 'uuid';
 import { promptCategories } from "@/utils/promptData";
-import { savePromptToHistory } from "../promptHistoryService";
 import { toast } from 'sonner';
 import { getApiKey as getProviderApiKey, saveApiKey as saveProviderApiKey, API_PROVIDERS } from '../apiKeyService';
 
@@ -233,9 +232,7 @@ export const generateOpenRouterPrompt = async (config: PromptConfig): Promise<Ap
       prompt: generatedPrompt,
     };
     
-    // Save the prompt to history
-    savePromptToHistory(apiResponse.prompt, config, config.model || 'openrouter');
-    
+    // No longer saving to history here - handled by promptService.ts
     toast.success("Prompt generated successfully!");
     return apiResponse;
 

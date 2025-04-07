@@ -1,7 +1,6 @@
 import { ApiResponse, Category, PromptConfigWithCategories } from '@/types/prompt';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
-import { savePromptToHistory } from "../promptHistoryService";
 import { getApiKey as getProviderApiKey, saveApiKey as saveProviderApiKey, API_PROVIDERS } from '../apiKeyService';
 
 // Novita API URLs based on their documentation - using OpenAI-compatible API
@@ -269,9 +268,7 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
       cleanedText = `${config.prefixText.trim()} ${cleanedText}`;
     }
 
-    // Save the prompt to history
-    savePromptToHistory(cleanedText.trim(), config, 'llama-4-maverick');
-
+    // No longer saving to history here - handled by promptService.ts
     toast.success("Llama 4 prompt generated successfully!");
     return {
       id: uuidv4(),
