@@ -6,6 +6,12 @@ import { getAllProviders } from '@/services/modelService';
 import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const Header: React.FC = () => {
   // API key state management
@@ -111,12 +117,20 @@ const Header: React.FC = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <Link to="/explorer">
-            <Button variant="outline" size="sm" className="gap-2">
-              <BookOpen className="h-4 w-4" />
-              Prompt Explorer
-            </Button>
-          </Link>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link to="/explorer">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <BookOpen className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Prompt Explorer</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           
           <ApiSettingsDialog 
             apiKeys={apiKeys}
