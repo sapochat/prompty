@@ -3,17 +3,52 @@ import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { getApiKey as getProviderApiKey, saveApiKey as saveProviderApiKey, API_PROVIDERS } from '../apiKeyService';
 
+interface ModelConfig {
+  name: string;
+  displayName: string;
+  description: string;
+  contextWindow: number;
+  maxTokens: number;
+  inputCost: number;
+  outputCost: number;
+  speed: 'very fast' | 'fast' | 'medium' | 'slow';
+  intelligence: 'low' | 'medium' | 'high' | 'very high';
+  provider: string;
+  tags: string[];
+}
+
+const modelConfigs: ModelConfig[] = [
+  {
+    name: 'llama-4-scout-17b-16e-instruct',
+    displayName: 'Llama 4 Scout 17B',
+    description: 'Meta\'s 17B parameter model optimized for instruction following and exploration',
+    contextWindow: 16384,
+    maxTokens: 4096,
+    inputCost: 0.0000004,
+    outputCost: 0.0000016,
+    speed: 'very fast',
+    intelligence: 'high',
+    provider: 'novita',
+    tags: ['instruction', '17b', 'meta', 'scout']
+  },
+  {
+    name: 'meta-llama/llama-4-maverick-17b-128e-instruct-fp8',
+    displayName: 'Llama 4 Maverick 17B',
+    description: 'Meta\'s 17B parameter model optimized for high-quality instruction following with 128k context',
+    contextWindow: 131072,
+    maxTokens: 4096,
+    inputCost: 0.0000004,
+    outputCost: 0.0000016,
+    speed: 'very fast',
+    intelligence: 'very high',
+    provider: 'novita',
+    tags: ['instruction', '17b', 'meta', 'maverick', '128k']
+  }
+];
+
 // Novita API URLs based on their documentation - using OpenAI-compatible API
 const NOVITA_BASE_URL = 'https://api.novita.ai/v3/openai';
 const NOVITA_API_URL = `${NOVITA_BASE_URL}/chat/completions`;
-
-export const getApiKey = async (): Promise<string> => {
-  return getProviderApiKey(API_PROVIDERS.NOVITA);
-};
-
-export const saveApiKey = async (apiKey: string): Promise<void> => {
-  return saveProviderApiKey(API_PROVIDERS.NOVITA, apiKey);
-};
 
 export const generateNovitaPrompt = async (config: PromptConfigWithCategories): Promise<ApiResponse> => {
   try {
@@ -103,8 +138,8 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
     console.log("Preparing Novita API request with prompt structure:", { systemPrompt, userPromptFirstLines: userPrompt.split('\n').slice(0, 5).join('\n') + '...' });
     console.log("Config categories:", config.promptCategories?.map((c: Category) => c.id));
     
-    // Set the model to the specified Llama 4 Maverick model
-    const modelName = "meta-llama/llama-4-maverick-17b-128e-instruct-fp8";
+    // Set the model to the specified Llama 4 Scout model
+    const modelName = config.model || "llama-4-scout-17b-16e-instruct";
     
     // Format the request for Llama 4
     const novitaPayload = {
@@ -282,4 +317,12 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
       error: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
     };
   }
+};
+
+export const getApiKey = async (): Promise<string> => {
+  return getProviderApiKey(API_PROVIDERS.NOVITA);
+};
+
+export const saveApiKey = async (apiKey: string): Promise<void> => {
+  return saveProviderApiKey(API_PROVIDERS.NOVITA, apiKey);
 };
