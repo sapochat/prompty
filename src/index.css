@@ -1,0 +1,227 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 10%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 12%; 
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 272 91% 65%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 84%;
+    --secondary-foreground: 240 5% 10%;
+
+    --muted: 240 5% 25%;
+    --muted-foreground: 240 5% 85%;
+
+    --accent: 195 95% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5% 26%;
+    --input: 240 5% 16%;
+    --ring: 240 10% 40%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+
+  /* Custom mobile optimization */
+  @media (max-width: 768px) {
+    .section-container {
+      @apply w-full max-w-full mx-auto my-4 p-3;
+    }
+    
+    /* Improve mobile popover handling */
+    .popover-content-mobile {
+      @apply w-[calc(100vw-2rem)] max-w-screen-sm p-0;
+    }
+    
+    /* Optimize text sizes */
+    .text-mobile-sm {
+      @apply text-sm;
+    }
+    
+    .text-mobile-xs {
+      @apply text-xs;
+    }
+    
+    /* Optimize selection components */
+    .mobile-select {
+      @apply text-sm h-9 w-full max-w-[280px];
+    }
+    
+    .mobile-dropdown {
+      @apply w-[90vw] max-w-[280px];
+    }
+    
+    /* Category selector specific styles */
+    .category-trigger {
+      @apply text-sm h-9 py-1 px-2;
+    }
+    
+    .category-badge {
+      @apply text-[10px] py-0 h-5;
+    }
+    
+    .category-option {
+      @apply text-sm;
+    }
+  }
+}
+
+/* Common UI elements */
+.flux-glow {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.5), 
+              0 0 40px rgba(217, 70, 239, 0.3);
+}
+
+.flux-card {
+  @apply bg-gradient-to-br from-background/80 to-card/95 backdrop-filter backdrop-blur-md border border-border/40 rounded-lg;
+}
+
+.gradient-text {
+  @apply text-transparent bg-clip-text bg-flux-gradient animate-pulse-slow;
+}
+
+/* Modal & Dialog Consistency */
+.modal-content {
+  @apply border bg-card text-card-foreground shadow-md rounded-lg overflow-hidden;
+}
+
+/* Consistent typography */
+.heading-1 {
+  @apply text-2xl font-bold text-foreground mb-4;
+}
+
+.heading-2 {
+  @apply text-xl font-bold text-foreground mb-3;
+}
+
+.heading-3 {
+  @apply text-lg font-semibold text-foreground mb-2;
+}
+
+.subtitle {
+  @apply text-sm text-muted-foreground;
+}
+
+/* Consistent spacing */
+.section-container {
+  @apply w-full max-w-4xl mx-auto my-6 p-6;
+}
+
+.flex-between {
+  @apply flex justify-between items-center;
+}
+
+.flex-center {
+  @apply flex justify-center items-center;
+}
+
+/* Content elements */
+.content-item {
+  @apply border border-border/40 rounded-md p-4 bg-background/30 hover:bg-background/50 transition-colors;
+}
+
+.item-header {
+  @apply flex-between mb-3;
+}
+
+.item-timestamp {
+  @apply text-xs text-muted-foreground font-medium;
+}
+
+.item-actions {
+  @apply flex space-x-1;
+}
+
+.item-content {
+  @apply mb-2 text-sm text-foreground;
+}
+
+.item-preview {
+  @apply line-clamp-2 whitespace-pre-line;
+}
+
+.item-expanded {
+  @apply whitespace-pre-wrap break-words bg-background/50 p-3 rounded-md border border-border/30;
+}
+
+.item-footer {
+  @apply mt-2 text-xs text-muted-foreground;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .heading-1 {
+    @apply text-xl;
+  }
+  
+  .heading-2 {
+    @apply text-lg;
+  }
+  
+  .heading-3 {
+    @apply text-base;
+  }
+  
+  .content-item {
+    @apply p-3;
+  }
+  
+  /* Command popover improvements */
+  .command-scroll-area {
+    @apply h-[40vh] max-h-[300px];
+  }
+  
+  .mobile-badge {
+    @apply text-xs truncate max-w-[100px];
+  }
+  
+  /* Selection components */
+  .selection-group {
+    @apply grid-cols-1 gap-2;
+  }
+  
+  .selection-item {
+    @apply max-w-full mb-2;
+  }
+  
+  .selection-dropdown {
+    @apply w-[90vw] max-w-[280px];
+  }
+  
+  /* Category selector specific styles */
+  .category-container {
+    @apply space-y-2;
+  }
+  
+  .category-title {
+    @apply text-base mb-1;
+  }
+  
+  .category-grid {
+    @apply grid-cols-1 gap-2;
+  }
+}
