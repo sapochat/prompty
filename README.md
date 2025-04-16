@@ -20,7 +20,7 @@ A locally-runnable AI prompt generator with secure API key management.
 4. **Generate** - Create prompts with a single click
 5. **View history** - Access all your previously generated prompts
 
-All data is stored locally in your browser - your API keys never leave your computer.
+All data is stored locally in your browser - your API are only used to authenticate the requests for inference.
 
 ## Supported AI Providers and Models
 
