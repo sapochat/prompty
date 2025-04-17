@@ -160,7 +160,7 @@ const PromptHistory: React.FC = () => {
 
   if (!isInitialized && isLoading) {
     return (
-      <Card className="flux-card section-container flex-center flex-col space-y-4 py-12">
+      <Card className="flux-card section-container flex-center flex-col space-y-4 py-12 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[var(--card-radius)] shadow-[var(--card-shadow)] text-white">
         <Spinner size="lg" />
         <p className="text-muted-foreground">Loading prompt history...</p>
       </Card>
@@ -169,7 +169,7 @@ const PromptHistory: React.FC = () => {
 
   if (isInitialized && history.length === 0) {
     return (
-      <Card className="flux-card section-container flex-center flex-col space-y-4 py-12">
+      <Card className="flux-card section-container flex-center flex-col space-y-4 py-12 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[var(--card-radius)] shadow-[var(--card-shadow)] text-white">
         <Clock className="h-12 w-12 text-muted-foreground opacity-50" />
         <p className="text-muted-foreground">No prompt history yet. Generated prompts will appear here.</p>
       </Card>
