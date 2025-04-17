@@ -10,7 +10,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "modal-content w-full max-w-4xl mx-auto my-6 rounded-3xl bg-card shadow-2xl border border-border p-4 md:p-8",
+      "w-full max-w-4xl mx-auto my-6 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[var(--card-radius)] shadow-[var(--card-shadow)] backdrop-blur-md text-white p-6 md:p-8",
       className
     )}
     {...props}

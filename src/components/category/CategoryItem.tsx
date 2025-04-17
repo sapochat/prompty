@@ -84,10 +84,10 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
         >
           <PopoverTrigger asChild>
             <Button
-              variant="outline"
+              variant="ghost"
               role="combobox"
               className={cn(
-                "w-full justify-between h-auto min-h-9 py-1.5",
+                "w-full justify-between h-auto min-h-11 py-2 px-4 bg-[#1a1a2e] border border-[#2a2a3a] text-white shadow-md rounded-lg hover:bg-[#252538] focus-visible:ring-1 focus-visible:ring-[#3a3a4a]",
                 isMobile ? "text-sm" : ""
               )}
               disabled={isLoading}
@@ -111,17 +111,17 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
             </Button>
           </PopoverTrigger>
           <PopoverContent className={cn(
-            "p-0",
-            isMobile ? "w-[90vw] max-w-[280px]" : "w-[300px]"
-          )} align="start">
+            "p-4 bg-[#1a1a2e] border border-[#2a2a3a] shadow-md rounded-lg",
+            isMobile ? "w-[90vw] max-w-[320px]" : "w-[340px]"
+          )} align="start" sideOffset={4} side="bottom" avoidCollisions={false} sticky="always">
             <Command>
-              <CommandInput placeholder={`Search ${category.name.toLowerCase()}...`} className="h-9" />
+              <CommandInput placeholder={`Search ${category.name.toLowerCase()}...`} className="h-9 bg-[#151525] text-gray-300 placeholder:text-gray-500 border-b border-[#2a2a3a]" />
               <CommandList>
-                <CommandEmpty>No results found.</CommandEmpty>
-                <div className="flex justify-between items-center px-2 py-1.5 flex-wrap gap-1">
+                <CommandEmpty className="py-4 text-center text-sm text-gray-400">No results found.</CommandEmpty>
+                <div className="flex justify-between items-center px-2 py-2 flex-wrap gap-1 border-b border-[#2a2a3a] mb-1 bg-[#151525]">
                   <span className={cn(
-                    "text-xs text-muted-foreground",
-                    isMobile ? "truncate max-w-[120px]" : ""
+                    "text-xs text-gray-400 font-light",
+                    isMobile ? "truncate max-w-[120px]" : "max-w-[200px] truncate"
                   )}>
                     {category.description}
                   </span>
@@ -130,7 +130,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-7 text-xs"
+                        className="h-7 text-xs bg-[#252538] hover:bg-[#2a2a42] text-gray-300"
                         onClick={() => handleClearCategory(category.id)}
                       >
                         Clear
@@ -139,7 +139,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 text-xs"
+                      className="h-7 text-xs bg-[#252538] hover:bg-[#2a2a42] text-gray-300"
                       onClick={handleRandomSelect}
                     >
                       <Shuffle className="h-3 w-3 mr-1" />
@@ -148,7 +148,10 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                   </div>
                 </div>
                 <CommandGroup>
-                  <ScrollArea className={isMobile ? "h-[40vh] max-h-[300px]" : "h-[300px]"}>
+                  <ScrollArea className={cn(
+                    "bg-[#121220] px-1",
+                    isMobile ? "h-[40vh] max-h-[300px]" : "h-[300px]"
+                  )}>
                     {category.options.map((option) => {
                       const isSelected = Array.isArray(selectedOptions[category.id as keyof PromptConfig])
                         ? (selectedOptions[category.id as keyof PromptConfig] as string[])?.includes(option.value)
@@ -159,17 +162,17 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                           key={option.id}
                           value={option.name}
                           onSelect={() => handleToggleOption(category.id, option.value)}
-                          className="flex items-center gap-2 cursor-pointer"
+                          className="flex items-center gap-2 cursor-pointer hover:bg-[#252538]"
                         >
                           <div className={cn(
-                            "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                            isSelected ? "bg-primary text-primary-foreground" : "opacity-50"
+                            "flex h-4 w-4 items-center justify-center rounded-sm border",
+                            isSelected ? "bg-[#3a3a6a] border-[#5a5a8a] text-white" : "border-[#3a3a4a] opacity-70"
                           )}>
                             {isSelected && <CheckIcon className="h-3 w-3" />}
                           </div>
                           <span className={cn(isMobile && "text-sm")}>{option.name}</span>
                           {option.description && !isMobile && (
-                            <span className="text-xs text-muted-foreground ml-auto">
+                            <span className="text-xs text-gray-400 ml-auto max-w-[140px] truncate">
                               {option.description}
                             </span>
                           )}
@@ -186,6 +189,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
           variant="outline"
           size={isMobile ? "sm" : "icon"}
           className={cn(
+            "bg-[#1a1a2e] border-[#2a2a3a] hover:bg-[#252538] text-gray-300",
             isMobile ? "px-2 min-h-9 h-auto" : "h-auto min-h-9"
           )}
           onClick={handleRandomSelect}
@@ -205,7 +209,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                 <Badge 
                   key={index} 
                   variant="secondary"
-                  className={cn("text-xs", isMobile && "text-[10px] py-0 h-5")}
+                  className={cn("text-xs bg-[#252538] text-gray-300 hover:bg-[#2a2a42] border border-[#2a2a3a]", isMobile && "text-[10px] py-0 h-5")}
                 >
                   {option.name}
                 </Badge>
@@ -215,7 +219,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
             selectedOptions[category.id as keyof PromptConfig] ? (
               <Badge 
                 variant="secondary" 
-                className={cn("text-xs", isMobile && "text-[10px] py-0 h-5")}
+                className={cn("text-xs bg-[#252538] text-gray-300 hover:bg-[#2a2a42] border border-[#2a2a3a]", isMobile && "text-[10px] py-0 h-5")}
               >
                 {category.options.find(o => o.value === selectedOptions[category.id as keyof PromptConfig])?.name}
               </Badge>

@@ -110,10 +110,13 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="w-full border-b border-border/40 backdrop-blur-sm bg-background/80 fixed top-0 left-0 right-0 z-50">
+    <header className="w-full fixed top-0 left-0 right-0 z-50 bg-[#121220] border-b border-white/10 backdrop-blur-md rounded-b-lg py-2 px-0 flex items-center" 
+      style={{
+        boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.5)'
+      }}>
       <div className="container flex items-center justify-between h-16 px-4">
         <div className="flex-1">
-          <h1 className="gradient-text text-xl font-semibold tracking-tight">Prompty</h1>
+          <h1 className="text-white text-2xl font-bold tracking-tight">Prompty</h1>
         </div>
         
         <div className="flex items-center space-x-4">
@@ -121,12 +124,15 @@ const Header: React.FC = () => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link to="/explorer">
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-2 bg-[#1a1a2e] border-[#2a2a3a] hover:bg-[#252538]">
                     <BookOpen className="h-4 w-4" />
                   </Button>
                 </Link>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent className="bg-[#1a1a2e] border-[#2a2a3a] text-white">
                 <p>Prompt Explorer</p>
               </TooltipContent>
             </Tooltip>
