@@ -3,7 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { dispatchPromptGeneratedEvent } from "@/hooks/usePromptHistory";
 
 /**
- * Save a generated prompt to local history
+ * Save a generated prompt to local history.
+ * Prompts are stored in localStorage as an array.
+ * Handles errors gracefully and dispatches a custom event on success.
  */
 export const savePromptToHistory = async (
   prompt: string,

@@ -13,6 +13,10 @@ export const API_PROVIDERS = {
   OPENROUTER: 'openrouter'
 };
 
+import { encryptString, decryptString } from '@/utils/cryptoUtils';
+// This service manages API key storage and retrieval, ensuring keys are encrypted at rest.
+// It also handles error cases and user feedback for secure and robust UX.
+
 /**
  * Get an API key from environment variables
  * This is used for initial setup if the key is provided via .env
@@ -36,18 +40,26 @@ const getApiKeyFromEnv = (provider: string): string => {
 export const getApiKey = async (provider: string): Promise<string> => {
   try {
     // Check localStorage first
-    const localKey = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}${provider}`);
-    
+    const encryptedKey = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}${provider}`);
+    let decryptedKey = '';
+    if (encryptedKey) {
+      try {
+        decryptedKey = await decryptString(encryptedKey);
+      } catch (e) {
+        console.warn('Failed to decrypt API key, possibly legacy/plaintext:', e);
+        // fallback to plaintext (legacy)
+        decryptedKey = encryptedKey;
+      }
+    }
     // If no key in localStorage, check environment variables
-    if (!localKey) {
+    if (!decryptedKey) {
       const envKey = getApiKeyFromEnv(provider);
       if (envKey) {
         await saveApiKey(provider, envKey);
         return envKey;
       }
     }
-    
-    return localKey || '';
+    return decryptedKey || '';
   } catch (error) {
     console.error(`Error retrieving ${provider} API key:`, error);
     return '';
@@ -60,11 +72,10 @@ export const getApiKey = async (provider: string): Promise<string> => {
  */
 export const saveApiKey = async (provider: string, apiKey: string): Promise<void> => {
   console.log(`Saving ${provider} API key:`, apiKey ? "Key provided" : "No key provided");
-  
   try {
-    // Save to localStorage
-    localStorage.setItem(`${LOCAL_STORAGE_PREFIX}${provider}`, apiKey);
-    
+    // Encrypt before saving
+    const encryptedKey = await encryptString(apiKey);
+    localStorage.setItem(`${LOCAL_STORAGE_PREFIX}${provider}`, encryptedKey);
     // Dispatch an event to notify components that API keys have changed
     window.dispatchEvent(new CustomEvent('apiKeysUpdated'));
   } catch (error) {

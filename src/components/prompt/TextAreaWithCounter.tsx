@@ -40,13 +40,14 @@ const TextAreaWithCounter: React.FC<TextAreaWithCounterProps> = ({
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
-        <label className="heading-3">{label}</label>
-        <span className="text-xs text-muted-foreground">
+        <label htmlFor="extra-details-textarea" className="heading-3">{label}</label>
+        <span id="extra-details-counter" className="text-xs text-muted-foreground" aria-live="polite">
           {value.length}/{maxLength} characters
         </span>
       </div>
       <Textarea
         ref={textareaRef}
+        id="extra-details-textarea"
         placeholder={placeholder}
         value={value}
         onChange={(e) => {
@@ -58,6 +59,8 @@ const TextAreaWithCounter: React.FC<TextAreaWithCounterProps> = ({
         className="resize-none min-h-[80px] max-h-[300px] transition-colors focus-visible:ring-1"
         disabled={isDisabled}
         maxLength={maxLength}
+        aria-label={label}
+        aria-describedby="extra-details-counter"
       />
     </div>
   );

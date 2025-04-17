@@ -4,7 +4,7 @@ import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-const Select = SelectPrimitive.Root
+const Select = (props: any) => <SelectPrimitive.Root {...props} />
 
 const SelectGroup = SelectPrimitive.Group
 
@@ -30,6 +30,7 @@ const SelectTrigger = React.forwardRef<
       "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 [&>span]:text-left",
       className
     )}
+    aria-label={props['aria-label']}
     {...props}
   >
     {children}
@@ -89,10 +90,8 @@ const SelectContent = React.forwardRef<
         className
       )}
       position={position}
-      onCloseAutoFocus={(event) => {
-        // Prevent auto-focusing elements below when closed
-        event.preventDefault();
-      }}
+      role="listbox"
+      onPointerDown={event => event.preventDefault()} // Prevent auto-focusing elements below when closed
       {...props}
     >
       <SelectScrollUpButton />
@@ -133,6 +132,9 @@ const SelectItem = React.forwardRef<
       "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
+    role="option"
+    aria-selected={props['aria-selected']}
+    aria-label={props['aria-label']}
     {...props}
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">

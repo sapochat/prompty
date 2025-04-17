@@ -25,7 +25,7 @@ const InputWithCounter: React.FC<InputWithCounterProps> = ({
     <div className="space-y-2">
       <div className="flex justify-between items-center">
         <label htmlFor={id} className="heading-3">{label}</label>
-        <span className="text-xs text-muted-foreground">
+        <span id={`${id}-counter`} className="text-xs text-muted-foreground" aria-live="polite">
           {value.length}/{maxLength} characters
         </span>
       </div>
@@ -37,6 +37,8 @@ const InputWithCounter: React.FC<InputWithCounterProps> = ({
         className="transition-colors focus-visible:ring-1"
         disabled={isDisabled}
         maxLength={maxLength}
+        aria-label={label}
+        aria-describedby={`${id}-counter`}
       />
     </div>
   );

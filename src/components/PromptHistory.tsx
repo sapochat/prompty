@@ -18,12 +18,37 @@ import { dispatchPromptConfigLoadedEvent } from '@/hooks/usePromptConfig';
 import { Badge } from "@/components/ui/badge";
 import { Link } from 'react-router-dom';
 
+const PAGE_SIZE = 20; // Number of prompt entries to load per chunk
+
 const PromptHistory: React.FC = () => {
   const { history, isLoading, isInitialized, loadHistory, handleDeletePrompt, handleClearAll } = usePromptHistory();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const [expandedBatches, setExpandedBatches] = useState<Record<string, boolean>>({});
   const [refreshing, setRefreshing] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE); // Track how many items are visible
+  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  // Infinite scroll: load more items when reaching the bottom
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const scrollArea = scrollAreaRef.current;
+      if (!scrollArea) return;
+      if (scrollArea.scrollTop + scrollArea.clientHeight >= scrollArea.scrollHeight - 10) {
+        // Near the bottom, load more
+        setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, organizePromptsForDisplay().length));
+      }
+    };
+    const scrollArea = scrollAreaRef.current;
+    if (scrollArea) {
+      scrollArea.addEventListener('scroll', handleScroll);
+    }
+    return () => {
+      if (scrollArea) {
+        scrollArea.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [scrollAreaRef, history]);
 
   const groupPromptsByBatch = () => {
     const batchGroups: Record<string, GeneratedPrompt[]> = {};
@@ -48,16 +73,15 @@ const PromptHistory: React.FC = () => {
   };
 
   const { batchGroups, standalonePrompts } = groupPromptsByBatch();
-  
+
+  // Organize prompts for display (batches and standalones)
   const organizePromptsForDisplay = () => {
     const batchKeys = Object.keys(batchGroups);
-    
     const organizedPrompts: Array<{
       type: 'batch' | 'standalone',
       batchId?: string,
       prompts: GeneratedPrompt[]
     }> = [];
-    
     batchKeys.forEach(batchId => {
       organizedPrompts.push({
         type: 'batch',
@@ -65,23 +89,28 @@ const PromptHistory: React.FC = () => {
         prompts: batchGroups[batchId]
       });
     });
-    
     standalonePrompts.forEach(prompt => {
       organizedPrompts.push({
         type: 'standalone',
         prompts: [prompt]
       });
     });
-    
     return organizedPrompts.sort((a, b) => {
       const aTime = Math.max(...a.prompts.map(p => p.timestamp));
       const bTime = Math.max(...b.prompts.map(p => p.timestamp));
       return bTime - aTime;
     });
   };
-  
-  const organizedPrompts = organizePromptsForDisplay();
-  
+
+  // Only render the visible chunk of prompts for performance
+  const organizedPrompts = organizePromptsForDisplay().slice(0, visibleCount);
+
+  // Accessibility: Announce when more prompts are loading
+  const [loadingMore, setLoadingMore] = React.useState(false);
+  React.useEffect(() => {
+    setLoadingMore(visibleCount < organizePromptsForDisplay().length);
+  }, [visibleCount, history]);
+
   const handleCopyPrompt = (prompt: string) => {
     navigator.clipboard.writeText(prompt);
     toast.success('Prompt copied to clipboard');
@@ -278,64 +307,33 @@ const PromptHistory: React.FC = () => {
             {refreshing || isLoading ? <Spinner size="sm" /> : <RefreshCw className="h-4 w-4" />}
             Refresh
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-2 text-destructive hover:bg-destructive/10"
-            onClick={handleClearAll}
-            disabled={refreshing || isLoading || history.length === 0}
-          >
-            <Trash className="h-4 w-4" />
-            Clear All
-          </Button>
         </div>
       </div>
-      
-      <ScrollArea className="h-[400px] pr-4">
-        {isLoading && history.length > 0 && (
-          <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
-            <Spinner size="lg" />
+      <ScrollArea className="flex-1">
+        {organizedPrompts.map((group, idx) => (
+          <div key={group.type === 'batch' ? group.batchId : idx}>
+            <div className={group.type === 'batch' ? 
+              "pl-3 border-l-2 border-primary/30 space-y-4 rounded-sm bg-primary/5 p-2" : 
+              ""}>
+              {group.type === 'batch' && group.batchId ? (
+                !expandedBatches[group.batchId] ? 
+                  renderPromptItem(group.prompts[0], 0, true) :
+                  group.prompts.map((item, idx) => renderPromptItem(item, idx, true))
+              ) : (
+                group.prompts.map(item => renderPromptItem(item))
+              )}
+            </div>
+          </div>
+        ))}
+        {loadingMore && (
+          <div className="flex justify-center items-center py-4" aria-live="polite">
+            <Spinner size="sm" className="mr-2" />
+            <span>Loading more prompts...</span>
           </div>
         )}
-        
-        <div className="space-y-4">
-          {organizedPrompts.map((group, index) => (
-            <div key={group.type === 'batch' ? `batch-${group.batchId}` : `standalone-${index}`}>
-              {group.type === 'batch' && (
-                <div className="mb-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center gap-2 text-sm font-medium text-primary p-1"
-                    onClick={() => group.batchId && toggleExpandBatch(group.batchId)}
-                  >
-                    <Layers className="h-4 w-4" />
-                    <span>Batch Generation ({group.prompts.length} prompts)</span>
-                    {group.batchId && expandedBatches[group.batchId] ? 
-                      <ChevronUp className="h-3.5 w-3.5" /> : 
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    }
-                  </Button>
-                </div>
-              )}
-              
-              <div className={group.type === 'batch' ? 
-                "pl-3 border-l-2 border-primary/30 space-y-4 rounded-sm bg-primary/5 p-2" : 
-                ""}>
-                {group.type === 'batch' && group.batchId ? (
-                  !expandedBatches[group.batchId] ? 
-                    renderPromptItem(group.prompts[0], 0, true) :
-                    group.prompts.map((item, idx) => renderPromptItem(item, idx, true))
-                ) : (
-                  group.prompts.map(item => renderPromptItem(item))
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
       </ScrollArea>
     </Card>
   );
-};
+}
 
 export default PromptHistory;
