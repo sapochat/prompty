@@ -28,13 +28,18 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   isMobile
 }) => {
   return (
-    <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'flex-between'}`}>
+    <div
+      className={`flex ${isMobile ? 'flex-col space-y-2' : 'flex-between'}`}
+      role="group"
+      aria-label="Prompt action buttons"
+    >
       <Button 
         variant="outline" 
         onClick={onReset}
         className="gap-2"
         disabled={isDisabled}
         size={isMobile ? "sm" : "default"}
+        aria-label="Reset all fields"
       >
         <RefreshCw className="h-4 w-4" />
         Reset
@@ -47,6 +52,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           className={`gap-2 ${isMobile ? 'w-full' : ''}`}
           disabled={isDisabled}
           size={isMobile ? "sm" : "default"}
+          aria-label="Randomize all fields"
         >
           <Shuffle className="h-4 w-4" />
           Randomize All
@@ -57,6 +63,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           disabled={isDisabled || !canGenerate || !hasModels}
           className={`gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 transition-opacity ${isMobile ? 'w-full' : ''}`}
           size={isMobile ? "sm" : "default"}
+          aria-label="Generate multiple prompts"
         >
           {isGenerating ? (
             <>
@@ -76,6 +83,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
           disabled={isDisabled || !canGenerate || !hasModels}
           className={`gap-2 bg-flux-gradient hover:opacity-90 transition-opacity ${isMobile ? 'w-full' : ''}`}
           size={isMobile ? "sm" : "default"}
+          aria-label="Generate prompt"
         >
           {isGenerating ? (
             <>

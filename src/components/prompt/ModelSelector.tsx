@@ -57,6 +57,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
       <Select 
         value={selectedModel} 
         onValueChange={handleModelSelect}
+        aria-label="AI Model Selector"
       >
         <SelectTrigger 
           className={cn(
@@ -67,6 +68,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
             // Stop click from propagating to elements underneath
             e.stopPropagation();
           }}
+          aria-label="Select an AI model"
         >
           <SelectValue placeholder="Select a model" className="text-left" />
         </SelectTrigger>
@@ -79,6 +81,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
             // Prevent the click from propagating to elements below
             e.preventDefault();
           }}
+          role="menu"
         >
           {sortedModels.map((model) => (
             <SelectItem 
@@ -88,6 +91,8 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                 // Stop propagation at the item level too
                 e.stopPropagation();
               }}
+              aria-label={`Select ${model.name} from ${model.provider}`}
+              role="option"
             >
               <div className="flex flex-col">
                 <span className={cn(isMobile && "text-sm truncate max-w-[200px]")}>

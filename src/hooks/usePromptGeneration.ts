@@ -6,7 +6,8 @@ import { toast } from 'sonner';
 import { availableModels } from '@/services/modelService';
 
 /**
- * Hook for handling prompt generation with loading state and error handling
+ * Hook for handling prompt generation with loading state and robust error handling.
+ * Handles prompt validation, API key checks, and user feedback via toasts.
  */
 export const usePromptGeneration = () => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -18,21 +19,23 @@ export const usePromptGeneration = () => {
     promptCategories: Category[],
     count: number = 1
   ) => {
+    // Validate model selection
     if (!promptConfig.model) {
-      toast.error("Please select a model");
+      toast.error("Please select a model before generating a prompt.");
       return;
     }
     
     const selectedModel = availableModels.find(model => model.id === promptConfig.model);
     
     if (!selectedModel) {
-      toast.error("Please select a valid model");
+      toast.error("Please select a valid model from the list.");
       return;
     }
     
+    // Check for API key
     const apiKey = await getApiKey(selectedModel.provider);
     if (!apiKey) {
-      toast.error(`Please add your ${selectedModel.provider} API key in the header settings`);
+      toast.error(`Missing API key: Please add your ${selectedModel.provider} API key in the header settings.`);
       return;
     }
 
@@ -55,7 +58,7 @@ export const usePromptGeneration = () => {
         
         if (errors.length > 0) {
           errors.forEach(error => {
-            toast.error(`Error generating prompt: ${error.error}`);
+            toast.error(`Error generating prompt: ${error.error || 'Unknown error occurred.'}`);
           });
         } else {
           if (count === 1) {
@@ -66,8 +69,13 @@ export const usePromptGeneration = () => {
         }
       }
     } catch (error) {
+      // Handle network and unexpected errors
+      if (error instanceof TypeError && error.message.includes('NetworkError')) {
+        toast.error('Network error: Please check your internet connection and try again.');
+      } else {
+        toast.error(`Failed to generate prompt: ${error instanceof Error ? error.message : 'Unknown error occurred.'}`);
+      }
       console.error("Error in handleGeneratePrompt:", error);
-      toast.error(`Failed to generate prompt: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGenerating(false);
     }
