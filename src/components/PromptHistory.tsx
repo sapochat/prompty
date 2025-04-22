@@ -160,8 +160,8 @@ const PromptHistory: React.FC = () => {
 
   if (!isInitialized && isLoading) {
     return (
-      <Card className="flux-card section-container flex-center flex-col space-y-4 py-12 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[var(--card-radius)] shadow-[var(--card-shadow)] text-white">
-        <Spinner size="lg" />
+      <Card className="flux-card section-container flex-center flex-col space-y-4 py-12 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[var(--card-radius)] shadow-[var(--card-shadow)] text-white" role="status" aria-label="Loading prompt history">
+        <Spinner size="lg" aria-hidden="true" />
         <p className="text-muted-foreground">Loading prompt history...</p>
       </Card>
     );
@@ -169,25 +169,25 @@ const PromptHistory: React.FC = () => {
 
   if (isInitialized && history.length === 0) {
     return (
-      <Card className="flux-card section-container flex-center flex-col space-y-4 py-12 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[var(--card-radius)] shadow-[var(--card-shadow)] text-white">
-        <Clock className="h-12 w-12 text-muted-foreground opacity-50" />
+      <Card className="flux-card section-container flex-center flex-col space-y-4 py-12 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[var(--card-radius)] shadow-[var(--card-shadow)] text-white" role="status" aria-label="Empty prompt history">
+        <Clock className="h-12 w-12 text-muted-foreground opacity-50" aria-hidden="true" />
         <p className="text-muted-foreground">No prompt history yet. Generated prompts will appear here.</p>
       </Card>
     );
   }
 
   const renderPromptItem = (item: GeneratedPrompt, index?: number, isInBatch?: boolean) => (
-    <div key={item.id} className={`content-item relative ${isInBatch ? 'border-l-0 pl-0' : ''}`}>
-      <div className="item-header">
+    <article key={item.id} className={`content-item relative ${isInBatch ? 'border-l-0 pl-0' : ''}`} aria-label={`Prompt from ${formatDate(item.timestamp)}`}>
+      <header className="item-header">
         <div className="flex items-center gap-2">
-          <span className="item-timestamp">{formatDate(item.timestamp)}</span>
+          <time className="item-timestamp" dateTime={new Date(item.timestamp).toISOString()}>{formatDate(item.timestamp)}</time>
           {isInBatch && (
             <Badge variant="outline" className="text-xs bg-primary/5 text-primary">
               Variation {index !== undefined ? index + 1 : ''}
             </Badge>
           )}
         </div>
-        <div className="item-actions">
+        <div className="item-actions" role="toolbar" aria-label="Prompt actions">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -242,17 +242,17 @@ const PromptHistory: React.FC = () => {
             </Tooltip>
           </TooltipProvider>
         </div>
-      </div>
+      </header>
       
-      <div>
+      <section className="prompt-content">
         {!expandedItems[item.id] && (
-          <div className="item-content item-preview">
+          <div className="item-content item-preview" id={`prompt-content-${item.id}`}>
             {item.prompt}
           </div>
         )}
         
         {expandedItems[item.id] && (
-          <div className="item-content item-expanded">
+          <div className="item-content item-expanded" id={`prompt-content-${item.id}`}>
             {item.prompt}
           </div>
         )}
@@ -262,6 +262,8 @@ const PromptHistory: React.FC = () => {
           size="sm"
           className="p-0 h-auto flex items-center text-left hover:bg-transparent text-primary hover:text-primary/80"
           onClick={() => toggleExpand(item.id)}
+          aria-expanded={expandedItems[item.id]}
+          aria-controls={`prompt-content-${item.id}`}
         >
           <span className="mr-1">
             {expandedItems[item.id] ? (
@@ -274,19 +276,19 @@ const PromptHistory: React.FC = () => {
             {expandedItems[item.id] ? 'Show less' : 'Show more'}
           </span>
         </Button>
-      </div>
+      </section>
 
-      <div className="item-footer">
+      <footer className="item-footer">
         Generated with: <span className="text-primary/80">{item.modelUsed || "AI Model"}</span>
-      </div>
-    </div>
+      </footer>
+    </article>
   );
 
   return (
-    <Card className="flux-card section-container">
-      <div className="flex-between mb-6">
+    <Card className="flux-card section-container" role="region" aria-label="Prompt History">
+      <header className="flex-between mb-6">
         <h2 className="heading-2 gradient-text">Recent Prompts</h2>
-        <div className="flex gap-2">
+        <nav className="flex gap-2" aria-label="Prompt history navigation">
           <Link to="/explorer">
             <Button 
               variant="outline" 
@@ -307,13 +309,14 @@ const PromptHistory: React.FC = () => {
             {refreshing || isLoading ? <Spinner size="sm" /> : <RefreshCw className="h-4 w-4" />}
             Refresh
           </Button>
-        </div>
-      </div>
-      <ScrollArea className="flex-1">
+        </nav>
+      </header>
+      <ScrollArea className="flex-1" ref={scrollAreaRef}>
         {organizedPrompts.map((group, idx) => (
-          <div key={group.type === 'batch' ? group.batchId : idx}>
-            <div className={group.type === 'batch' ? 
-              "pl-3 border-l-2 border-primary/30 space-y-4 rounded-sm bg-primary/5 p-2" : 
+          <section key={group.type === 'batch' ? group.batchId : idx}
+            aria-label={group.type === 'batch' ? 'Prompt batch' : 'Individual prompt'}>
+            <div className={group.type === 'batch' ?
+              "pl-3 border-l-2 border-primary/30 space-y-4 rounded-sm bg-primary/5 p-2" :
               ""}>
               {group.type === 'batch' && group.batchId ? (
                 !expandedBatches[group.batchId] ? 
@@ -323,13 +326,13 @@ const PromptHistory: React.FC = () => {
                 group.prompts.map(item => renderPromptItem(item))
               )}
             </div>
-          </div>
+          </section>
         ))}
         {loadingMore && (
-          <div className="flex justify-center items-center py-4" aria-live="polite">
+          <footer className="flex justify-center items-center py-4" aria-live="polite">
             <Spinner size="sm" className="mr-2" />
             <span>Loading more prompts...</span>
-          </div>
+          </footer>
         )}
       </ScrollArea>
     </Card>
