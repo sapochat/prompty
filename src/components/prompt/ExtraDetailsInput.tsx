@@ -19,7 +19,11 @@ const ExtraDetailsInput: React.FC<ExtraDetailsInputProps> = ({
   onPrefixChange
 }) => {
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4"
+      role="group"
+      aria-label="Additional prompt details"
+    >
       <InputWithCounter
         id="prefix-text"
         label="Prefix Text"
@@ -29,7 +33,6 @@ const ExtraDetailsInput: React.FC<ExtraDetailsInputProps> = ({
         isDisabled={isDisabled}
         maxLength={100}
       />
-      
       <TextAreaWithCounter
         label="Extra Details"
         placeholder="Add any specific details or additional instructions..."

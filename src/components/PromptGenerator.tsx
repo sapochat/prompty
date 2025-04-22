@@ -147,13 +147,13 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({ initialConfig }) => {
   const canGeneratePrompt = selectedCategoriesCount >= requiredCategoriesCount;
   
   return (
-    <Card className="shadow-md rounded-lg overflow-hidden">
-      <div className="p-4 space-y-6">
+    <Card className="bg-[#121220] border border-[#2a2a3a] rounded-lg shadow-md text-white overflow-hidden">
+      <div className="p-5 space-y-6">
         <div className="space-y-6">
           <div className="flex justify-between items-start">
             <div className="space-y-1">
-              <h3 className="text-lg font-semibold">AI Model</h3>
-              <p className="text-sm text-muted-foreground">Select which AI model to use</p>
+              <h3 className="text-lg font-semibold text-white">AI Model</h3>
+              <p className="text-sm text-gray-400">Select which AI model to use</p>
             </div>
           </div>
           
