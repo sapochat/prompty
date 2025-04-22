@@ -110,16 +110,17 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="w-full fixed top-0 left-0 right-0 z-50 bg-[#121220] border-b border-white/10 backdrop-blur-md rounded-b-lg py-2 px-0 flex items-center" 
+    <header className="w-full fixed top-0 left-0 right-0 z-50 bg-[#121220] border-b border-white/10 backdrop-blur-md rounded-b-lg py-2 px-0 flex items-center"
       style={{
         boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.5)'
-      }}>
+      }}
+      role="banner">
       <div className="container flex items-center justify-between h-16 px-4">
-        <div className="flex-1">
+        <section className="flex-1">
           <h1 className="text-white text-2xl font-bold tracking-tight">Prompty</h1>
-        </div>
+        </section>
         
-        <div className="flex items-center space-x-4">
+        <nav className="flex items-center space-x-4" aria-label="Main navigation">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -145,7 +146,7 @@ const Header: React.FC = () => {
             onKeysUpdated={handleKeysUpdated}
             onProvidersUpdated={handleProvidersUpdated}
           />
-        </div>
+        </nav>
       </div>
     </header>
   );

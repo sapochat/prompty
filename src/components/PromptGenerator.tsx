@@ -147,58 +147,70 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({ initialConfig }) => {
   const canGeneratePrompt = selectedCategoriesCount >= requiredCategoriesCount;
   
   return (
-    <Card className="bg-[#121220] border border-[#2a2a3a] rounded-lg shadow-md text-white overflow-hidden">
-      <div className="p-5 space-y-6">
-        <div className="space-y-6">
-          <div className="flex justify-between items-start">
-            <div className="space-y-1">
-              <h3 className="text-lg font-semibold text-white">AI Model</h3>
-              <p className="text-sm text-gray-400">Select which AI model to use</p>
-            </div>
-          </div>
+    <Card className="bg-[#121220] border border-[#2a2a3a] rounded-lg shadow-md text-white overflow-hidden" role="region" aria-label="Prompt Generator">
+      <form className="p-5 space-y-6" onSubmit={(e) => e.preventDefault()}>
+        <fieldset className="space-y-6">
+          <legend className="sr-only">Prompt Configuration</legend>
           
-          <ModelSelector
-            isLoading={isLoadingKeys}
-            filteredModels={filteredModels}
-            selectedModel={promptConfig.model || ''}
-            onModelChange={handleModelChange}
-          />
+          <section className="model-selection-section" aria-labelledby="model-selection-heading">
+            <header className="flex justify-between items-start">
+              <div className="space-y-1">
+                <h3 id="model-selection-heading" className="text-lg font-semibold text-white">AI Model</h3>
+                <p className="text-sm text-gray-400">Select which AI model to use</p>
+              </div>
+            </header>
+            
+            <ModelSelector
+              isLoading={isLoadingKeys}
+              filteredModels={filteredModels}
+              selectedModel={promptConfig.model || ''}
+              onModelChange={handleModelChange}
+            />
+          </section>
           
-          <CategorySelector 
-            categories={promptCategories} 
-            selectedOptions={promptConfig}
-            onOptionSelect={handleOptionSelect}
-            isLoading={isGenerating || isLoadingKeys}
-          />
+          <section className="category-selection-section" aria-label="Category Selection">
+            <CategorySelector
+              categories={promptCategories}
+              selectedOptions={promptConfig}
+              onOptionSelect={handleOptionSelect}
+              isLoading={isGenerating || isLoadingKeys}
+            />
+          </section>
           
-          <ExtraDetailsInput
-            value={extraDetails}
-            onChange={handleExtraDetailsChange}
-            isDisabled={isGenerating || isLoadingKeys}
-            prefixText={prefixText}
-            onPrefixChange={handlePrefixTextChange}
-          />
+          <section className="extra-details-section" aria-label="Additional Details">
+            <ExtraDetailsInput
+              value={extraDetails}
+              onChange={handleExtraDetailsChange}
+              isDisabled={isGenerating || isLoadingKeys}
+              prefixText={prefixText}
+              onPrefixChange={handlePrefixTextChange}
+            />
+          </section>
           
-          <ActionButtons
-            onReset={handleReset}
-            onRandomizeAll={handleRandomizeAll}
-            onGeneratePrompt={handleGeneratePrompt}
-            onGenerateMultiple={handleGenerateMultiple}
-            isGenerating={isGenerating}
-            isDisabled={isGenerating || isLoadingKeys}
-            canGenerate={canGeneratePrompt}
-            hasModels={filteredModels.length > 0}
-            isMobile={isMobile}
-          />
+          <section className="action-buttons-section" aria-label="Generator Controls">
+            <ActionButtons
+              onReset={handleReset}
+              onRandomizeAll={handleRandomizeAll}
+              onGeneratePrompt={handleGeneratePrompt}
+              onGenerateMultiple={handleGenerateMultiple}
+              isGenerating={isGenerating}
+              isDisabled={isGenerating || isLoadingKeys}
+              canGenerate={canGeneratePrompt}
+              hasModels={filteredModels.length > 0}
+              isMobile={isMobile}
+            />
+          </section>
           
-          <StatusMessage
-            isLoadingKeys={isLoadingKeys}
-            hasModels={filteredModels.length > 0}
-            selectedCategoriesCount={selectedCategoriesCount}
-            requiredCount={requiredCategoriesCount}
-          />
-        </div>
-      </div>
+          <footer className="status-message-section" aria-live="polite">
+            <StatusMessage
+              isLoadingKeys={isLoadingKeys}
+              hasModels={filteredModels.length > 0}
+              selectedCategoriesCount={selectedCategoriesCount}
+              requiredCount={requiredCategoriesCount}
+            />
+          </footer>
+        </fieldset>
+      </form>
     </Card>
   );
 };
