@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { debounce } from 'lodash';
 
 // Create a custom event for prompt generation
+// This allows other components to react when a new prompt is generated (e.g., refresh history list).
 export const PROMPT_GENERATED_EVENT = 'promptGenerated';
 
 // Function to dispatch the prompt generated event
@@ -38,9 +39,13 @@ export const usePromptHistory = () => {
       
       setHistory(loadedHistory);
       setIsInitialized(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading history:", error);
-      toast.error("Failed to load prompt history");
+      if (error && error.name === 'QuotaExceededError') {
+        toast.error("Storage limit reached. Please clear some prompt history.");
+      } else {
+        toast.error("Failed to load prompt history. Please try again later.");
+      }
     } finally {
       setIsLoading(false);
       loadingRef.current = false;
@@ -77,9 +82,13 @@ export const usePromptHistory = () => {
       await deleteFromHistory(id);
       await loadHistory();
       toast.info('Prompt deleted from history');
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting prompt:", error);
-      toast.error("Failed to delete prompt");
+      if (error && error.name === 'QuotaExceededError') {
+        toast.error("Storage limit reached. Please clear some prompt history.");
+      } else {
+        toast.error("Failed to delete prompt. Please try again.");
+      }
     }
   };
 

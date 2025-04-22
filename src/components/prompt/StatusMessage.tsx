@@ -15,7 +15,11 @@ const StatusMessage: React.FC<StatusMessageProps> = ({
   requiredCount
 }) => {
   return (
-    <div className="text-center text-sm text-muted-foreground">
+    <div
+      className="text-center text-sm text-muted-foreground"
+      role="status"
+      aria-live="polite"
+    >
       {isLoadingKeys ? (
         "Loading API settings..."
       ) : !hasModels ? (

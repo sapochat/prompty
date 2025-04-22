@@ -28,13 +28,18 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   isMobile
 }) => {
   return (
-    <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'flex-between'}`}>
+    <div
+      className={`flex ${isMobile ? 'flex-col space-y-2' : 'flex-between'}`}
+      role="group"
+      aria-label="Prompt action buttons"
+    >
       <Button 
         variant="outline" 
         onClick={onReset}
-        className="gap-2"
+        className="gap-2 bg-[#1a1a2e] border-[#2a2a3a] hover:bg-[#252538]"
         disabled={isDisabled}
         size={isMobile ? "sm" : "default"}
+        aria-label="Reset all fields"
       >
         <RefreshCw className="h-4 w-4" />
         Reset
@@ -44,9 +49,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         <Button
           variant="outline"
           onClick={onRandomizeAll}
-          className={`gap-2 ${isMobile ? 'w-full' : ''}`}
+          className={`gap-2 bg-[#1a1a2e] border-[#2a2a3a] hover:bg-[#252538] ${isMobile ? 'w-full' : ''}`}
           disabled={isDisabled}
           size={isMobile ? "sm" : "default"}
+          aria-label="Randomize all fields"
         >
           <Shuffle className="h-4 w-4" />
           Randomize All
@@ -55,8 +61,9 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         <Button 
           onClick={onGenerateMultiple} 
           disabled={isDisabled || !canGenerate || !hasModels}
-          className={`gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:opacity-90 transition-opacity ${isMobile ? 'w-full' : ''}`}
+          className={`gap-2 bg-[#3a2a5a] hover:bg-[#453a6a] ${isMobile ? 'w-full' : ''}`}
           size={isMobile ? "sm" : "default"}
+          aria-label="Generate multiple prompts"
         >
           {isGenerating ? (
             <>
@@ -74,8 +81,9 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         <Button 
           onClick={onGeneratePrompt} 
           disabled={isDisabled || !canGenerate || !hasModels}
-          className={`gap-2 bg-flux-gradient hover:opacity-90 transition-opacity ${isMobile ? 'w-full' : ''}`}
+          className={`gap-2 bg-[#2a3a5a] hover:bg-[#3a4a6a] ${isMobile ? 'w-full' : ''}`}
           size={isMobile ? "sm" : "default"}
+          aria-label="Generate prompt"
         >
           {isGenerating ? (
             <>
