@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -26,17 +26,93 @@ const PromptHistory: React.FC = () => {
   const [expandedBatches, setExpandedBatches] = useState<Record<string, boolean>>({});
   const [refreshing, setRefreshing] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE); // Track how many items are visible
-  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const lastScrollTimeRef = useRef<number>(0);
   const navigate = useNavigate();
 
-  // Infinite scroll: load more items when reaching the bottom
+  // Memoize batch grouping - only recalculate when history changes
+  const { batchGroups, standalonePrompts } = useMemo(() => {
+    const batchGroups: Record<string, GeneratedPrompt[]> = {};
+    const standalonePrompts: GeneratedPrompt[] = [];
+
+    history.forEach(prompt => {
+      if (prompt.batchId) {
+        if (!batchGroups[prompt.batchId]) {
+          batchGroups[prompt.batchId] = [];
+        }
+        batchGroups[prompt.batchId].push(prompt);
+      } else {
+        standalonePrompts.push(prompt);
+      }
+    });
+
+    // Sort each batch group by timestamp
+    Object.values(batchGroups).forEach(group => {
+      group.sort((a, b) => b.timestamp - a.timestamp);
+    });
+
+    return { batchGroups, standalonePrompts };
+  }, [history]);
+
+  // Memoize organized prompts for display - only recalculate when grouping changes
+  const allOrganizedPrompts = useMemo(() => {
+    const batchKeys = Object.keys(batchGroups);
+    const organizedPrompts: Array<{
+      type: 'batch' | 'standalone',
+      batchId?: string,
+      prompts: GeneratedPrompt[]
+    }> = [];
+
+    batchKeys.forEach(batchId => {
+      organizedPrompts.push({
+        type: 'batch',
+        batchId,
+        prompts: batchGroups[batchId]
+      });
+    });
+
+    standalonePrompts.forEach(prompt => {
+      organizedPrompts.push({
+        type: 'standalone',
+        prompts: [prompt]
+      });
+    });
+
+    // Sort by most recent timestamp in each group
+    return organizedPrompts.sort((a, b) => {
+      const aTime = Math.max(...a.prompts.map(p => p.timestamp));
+      const bTime = Math.max(...b.prompts.map(p => p.timestamp));
+      return bTime - aTime;
+    });
+  }, [batchGroups, standalonePrompts]);
+
+  // Memoize the visible slice of organized prompts
+  const organizedPrompts = useMemo(() => {
+    return allOrganizedPrompts.slice(0, visibleCount);
+  }, [allOrganizedPrompts, visibleCount]);
+
+  // Memoize whether there are more items to load
+  const loadingMore = useMemo(() => {
+    return visibleCount < allOrganizedPrompts.length;
+  }, [visibleCount, allOrganizedPrompts.length]);
+
+  // Infinite scroll with throttled scroll handler
   React.useEffect(() => {
+    const THROTTLE_MS = 100;
+
     const handleScroll = () => {
+      const now = Date.now();
+      // Throttle scroll events
+      if (now - lastScrollTimeRef.current < THROTTLE_MS) {
+        return;
+      }
+      lastScrollTimeRef.current = now;
+
       const scrollArea = scrollAreaRef.current;
       if (!scrollArea) return;
       if (scrollArea.scrollTop + scrollArea.clientHeight >= scrollArea.scrollHeight - 10) {
         // Near the bottom, load more
-        setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, organizePromptsForDisplay().length));
+        setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, allOrganizedPrompts.length));
       }
     };
     const scrollArea = scrollAreaRef.current;
@@ -48,95 +124,34 @@ const PromptHistory: React.FC = () => {
         scrollArea.removeEventListener('scroll', handleScroll);
       }
     };
-  }, [scrollAreaRef, history]);
+  }, [allOrganizedPrompts.length]);
 
-  const groupPromptsByBatch = () => {
-    const batchGroups: Record<string, GeneratedPrompt[]> = {};
-    const standalonePrompts: GeneratedPrompt[] = [];
-    
-    history.forEach(prompt => {
-      if (prompt.batchId) {
-        if (!batchGroups[prompt.batchId]) {
-          batchGroups[prompt.batchId] = [];
-        }
-        batchGroups[prompt.batchId].push(prompt);
-      } else {
-        standalonePrompts.push(prompt);
-      }
-    });
-    
-    Object.values(batchGroups).forEach(group => {
-      group.sort((a, b) => b.timestamp - a.timestamp);
-    });
-    
-    return { batchGroups, standalonePrompts };
-  };
-
-  const { batchGroups, standalonePrompts } = groupPromptsByBatch();
-
-  // Organize prompts for display (batches and standalones)
-  const organizePromptsForDisplay = () => {
-    const batchKeys = Object.keys(batchGroups);
-    const organizedPrompts: Array<{
-      type: 'batch' | 'standalone',
-      batchId?: string,
-      prompts: GeneratedPrompt[]
-    }> = [];
-    batchKeys.forEach(batchId => {
-      organizedPrompts.push({
-        type: 'batch',
-        batchId,
-        prompts: batchGroups[batchId]
-      });
-    });
-    standalonePrompts.forEach(prompt => {
-      organizedPrompts.push({
-        type: 'standalone',
-        prompts: [prompt]
-      });
-    });
-    return organizedPrompts.sort((a, b) => {
-      const aTime = Math.max(...a.prompts.map(p => p.timestamp));
-      const bTime = Math.max(...b.prompts.map(p => p.timestamp));
-      return bTime - aTime;
-    });
-  };
-
-  // Only render the visible chunk of prompts for performance
-  const organizedPrompts = organizePromptsForDisplay().slice(0, visibleCount);
-
-  // Accessibility: Announce when more prompts are loading
-  const [loadingMore, setLoadingMore] = React.useState(false);
-  React.useEffect(() => {
-    setLoadingMore(visibleCount < organizePromptsForDisplay().length);
-  }, [visibleCount, history]);
-
-  const handleCopyPrompt = (prompt: string) => {
+  const handleCopyPrompt = useCallback((prompt: string) => {
     navigator.clipboard.writeText(prompt);
     toast.success('Prompt copied to clipboard');
-  };
+  }, []);
 
-  const formatDate = (timestamp: number) => {
+  const formatDate = useCallback((timestamp: number) => {
     return new Date(timestamp).toLocaleString();
-  };
+  }, []);
 
-  const toggleExpand = (id: string) => {
+  const toggleExpand = useCallback((id: string) => {
     setExpandedItems(prev => ({
       ...prev,
       [id]: !prev[id]
     }));
-  };
+  }, []);
 
-  const toggleExpandBatch = (batchId: string) => {
+  const toggleExpandBatch = useCallback((batchId: string) => {
     setExpandedBatches(prev => ({
       ...prev,
       [batchId]: !prev[batchId]
     }));
-  };
+  }, []);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     if (refreshing) return;
-    
+
     setRefreshing(true);
     try {
       await loadHistory();
@@ -146,17 +161,17 @@ const PromptHistory: React.FC = () => {
     } finally {
       setRefreshing(false);
     }
-  };
+  }, [refreshing, loadHistory]);
 
-  const handleLoadPromptConfig = (prompt: GeneratedPrompt) => {
+  const handleLoadPromptConfig = useCallback((prompt: GeneratedPrompt) => {
     dispatchPromptConfigLoadedEvent(prompt.config);
-    
+
     if (window.location.pathname !== '/') {
       navigate('/');
     }
-    
+
     toast.success('Prompt configuration loaded');
-  };
+  }, [navigate]);
 
   if (!isInitialized && isLoading) {
     return (
