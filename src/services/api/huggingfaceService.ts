@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { promptCategories } from "@/utils/promptData";
 import { toast } from 'sonner';
 import { getApiKey as getProviderApiKey, saveApiKey as saveProviderApiKey, API_PROVIDERS } from '../apiKeyService';
+import { logger } from '@/utils/logger';
 
 // Cache for storing generated prompts to avoid redundant API calls
 const promptCache = new Map<string, {prompt: string, timestamp: number}>();
@@ -37,7 +38,7 @@ export const generateHuggingfacePrompt = async (config: PromptConfig): Promise<A
     const cachedResult = promptCache.get(cacheKey);
     
     if (cachedResult && (Date.now() - cachedResult.timestamp) < CACHE_EXPIRY) {
-      console.log('Using cached prompt result');
+      logger.log('Using cached prompt result');
       
       // Create API response from cache
       const apiResponse: ApiResponse = {
@@ -127,7 +128,7 @@ export const generateHuggingfacePrompt = async (config: PromptConfig): Promise<A
     
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Huggingface API error:', errorData);
+      logger.error('Huggingface API error:', errorData);
       throw new Error('Error calling Huggingface API');
     }
     
@@ -143,7 +144,7 @@ export const generateHuggingfacePrompt = async (config: PromptConfig): Promise<A
       // Alternate format
       generatedPrompt = data.generated_text;
     } else {
-      console.error('Unexpected response format from Huggingface:', data);
+      logger.error('Unexpected response format from Huggingface:', data);
       throw new Error('Received invalid response from Huggingface API');
     }
     
@@ -165,12 +166,12 @@ export const generateHuggingfacePrompt = async (config: PromptConfig): Promise<A
     // No longer saving to history here - handled by promptService.ts
     toast.success("Prompt generated successfully!");
     return apiResponse;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle any errors that occurred
-    const errorMessage = error.message || 'Unknown error occurred';
-    console.error("Error generating prompt with Huggingface:", errorMessage);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    logger.error("Error generating prompt with Huggingface:", errorMessage);
     toast.error(`Error: ${errorMessage}`);
-    
+
     return {
       id: uuidv4(),
       prompt: '',

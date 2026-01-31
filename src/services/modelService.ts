@@ -1,10 +1,10 @@
-
 import { AIModel } from '@/types/prompt';
 import { getApiKey as getOpenAIApiKey } from './api/openaiService';
 import { getApiKey as getAnthropicApiKey } from './api/anthropicService';
 import { getApiKey as getHuggingfaceApiKey } from './api/huggingfaceService';
 import { getApiKey as getNovitaApiKey } from './api/novitaService';
 import { getApiKey as getOpenRouterApiKey } from './api/openrouterService';
+import { logger } from '@/utils/logger';
 
 /**
  * List of all available models across all providers
@@ -103,15 +103,15 @@ export const getAvailableModels = async (): Promise<AIModel[]> => {
   const openrouterApiKey = await getOpenRouterApiKey();
   const enabledModels = await getEnabledModels();
 
-  console.log("API keys status for model filtering:", { 
-    openai: openaiApiKey ? "available" : "missing", 
-    anthropic: anthropicApiKey ? "available" : "missing", 
+  logger.log("API keys status for model filtering:", {
+    openai: openaiApiKey ? "available" : "missing",
+    anthropic: anthropicApiKey ? "available" : "missing",
     huggingface: huggingfaceApiKey ? "available" : "missing",
     novita: novitaApiKey ? "available" : "missing",
     openrouter: openrouterApiKey ? "available" : "missing"
   });
-  
-  console.log("Enabled models:", enabledModels);
+
+  logger.log("Enabled models:", enabledModels);
 
   return availableModels.filter(model => {
     // Check if model is enabled

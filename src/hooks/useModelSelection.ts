@@ -1,7 +1,7 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { AIModel } from '@/types/prompt';
 import { getAvailableModels, availableModels } from '@/services/modelService';
+import { logger } from '@/utils/logger';
 
 /**
  * Hook for handling model selection and filtering
@@ -27,11 +27,11 @@ export const useModelSelection = (initialModelId?: string) => {
     setIsLoadingKeys(true);
     try {
       const models = await getAvailableModels();
-      console.log("Available models:", models.map(m => m.id).join(", "));
+      logger.log("Available models:", models.map(m => m.id).join(", "));
       setFilteredModels(models);
       return models;
     } catch (error) {
-      console.error("Error loading API keys:", error);
+      logger.error("Error loading API keys:", error);
       return [];
     } finally {
       setIsLoadingKeys(false);

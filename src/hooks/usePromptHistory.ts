@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useHistoryStore } from '@/stores';
 import { toast } from 'sonner';
 import type { PromptConfig } from '@/types/prompt';
+import { logger } from '@/utils/logger';
 
 // Keep event for backward compatibility during migration
 // TODO: Remove custom event once all consumers use Zustand directly
@@ -9,7 +10,7 @@ export const PROMPT_GENERATED_EVENT = 'promptGenerated';
 
 // Function to dispatch the prompt generated event
 export const dispatchPromptGeneratedEvent = () => {
-  console.log("Dispatching prompt generated event");
+  logger.log("Dispatching prompt generated event");
   const event = new CustomEvent(PROMPT_GENERATED_EVENT);
   window.dispatchEvent(event);
 };
@@ -44,7 +45,7 @@ export const usePromptHistory = () => {
   // Backward-compatible loadHistory function (now a no-op since Zustand handles persistence)
   const loadHistory = useCallback(() => {
     // No-op: Zustand persist middleware handles loading automatically
-    console.log("loadHistory called - Zustand handles persistence automatically");
+    logger.log("loadHistory called - Zustand handles persistence automatically");
   }, []);
 
   return {

@@ -2,6 +2,7 @@ import { ApiResponse, Category, PromptConfigWithCategories } from '@/types/promp
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { getApiKey as getProviderApiKey, saveApiKey as saveProviderApiKey, API_PROVIDERS } from '../apiKeyService';
+import { logger } from '@/utils/logger';
 
 interface ModelConfig {
   name: string;
@@ -106,7 +107,7 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
     
     // Check if we have promptCategories before using them
     if (!config.promptCategories || !Array.isArray(config.promptCategories)) {
-      console.error("Missing promptCategories in config", config);
+      logger.error("Missing promptCategories in config", config);
       return {
         id: uuidv4(),
         prompt: '',
@@ -135,8 +136,8 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
       "7. DO NOT respond with anything that isn't part of the actual prompt.\n" +
       "8. Be creative but concise, focusing only on descriptive content.";
     
-    console.log("Preparing Novita API request with prompt structure:", { systemPrompt, userPromptFirstLines: userPrompt.split('\n').slice(0, 5).join('\n') + '...' });
-    console.log("Config categories:", config.promptCategories?.map((c: Category) => c.id));
+    logger.log("Preparing Novita API request with prompt structure:", { systemPrompt, userPromptFirstLines: userPrompt.split('\n').slice(0, 5).join('\n') + '...' });
+    logger.log("Config categories:", config.promptCategories?.map((c: Category) => c.id));
     
     // Set the model to the specified Llama 4 Scout model
     const modelName = config.model || "llama-4-scout-17b-16e-instruct";
@@ -159,7 +160,7 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
       stream: false
     };
 
-    console.log("Sending to Novita API:", { endpoint: NOVITA_API_URL, model: modelName });
+    logger.log("Sending to Novita API:", { endpoint: NOVITA_API_URL, model: modelName });
     
     // Make the API call to Novita using OpenAI-compatible endpoint
     const response = await fetch(NOVITA_API_URL, {
@@ -173,12 +174,12 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
 
     // Log the raw response for debugging
     const rawResponseText = await response.text();
-    console.log("Novita API raw response (first 100 chars):", rawResponseText.substring(0, 100));
+    logger.log("Novita API raw response (first 100 chars):", rawResponseText.substring(0, 100));
 
     // Check if the response is successful
     if (!response.ok) {
-      console.error("Novita API error status:", response.status, response.statusText);
-      console.error("Novita API error response:", rawResponseText);
+      logger.error("Novita API error status:", response.status, response.statusText);
+      logger.error("Novita API error response:", rawResponseText);
       
       let errorMessage = `Novita API error: ${response.statusText} (${response.status})`;
       
@@ -189,7 +190,7 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
           errorMessage = errorData.error?.message || errorData.error || errorData.message || errorMessage;
         }
       } catch (parseError) {
-        console.error("Failed to parse error response:", parseError);
+        logger.error("Failed to parse error response:", parseError);
       }
       
       return {
@@ -203,9 +204,9 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
     let responseData;
     try {
       responseData = JSON.parse(rawResponseText);
-      console.log("Novita API parsed response structure:", Object.keys(responseData));
+      logger.log("Novita API parsed response structure:", Object.keys(responseData));
     } catch (parseError) {
-      console.error("Failed to parse Novita response as JSON:", parseError);
+      logger.error("Failed to parse Novita response as JSON:", parseError);
       return {
         id: uuidv4(),
         prompt: '',
@@ -217,7 +218,7 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
     const generatedText = responseData.choices?.[0]?.message?.content;
     
     if (!generatedText) {
-      console.error("No generated text found in response:", responseData);
+      logger.error("No generated text found in response:", responseData);
       return {
         id: uuidv4(),
         prompt: '',
@@ -227,7 +228,7 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
 
     // Enhanced cleaning function specific for Llama 4 responses
     const cleanLlama4Response = (text: string) => {
-      console.log("Raw Llama 4 output (first 100 chars):", text.substring(0, 100));
+      logger.log("Raw Llama 4 output (first 100 chars):", text.substring(0, 100));
       
       // Remove special tokens
       let cleaned = text;
@@ -291,7 +292,7 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
       // Trim and remove extra whitespace
       cleaned = cleaned.trim().replace(/\n{3,}/g, '\n\n');
       
-      console.log("Cleaned Llama 4 output (first 100 chars):", cleaned.substring(0, 100));
+      logger.log("Cleaned Llama 4 output (first 100 chars):", cleaned.substring(0, 100));
       return cleaned;
     };
 
@@ -310,7 +311,7 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
       prompt: cleanedText.trim()
     };
   } catch (error) {
-    console.error("Error generating Novita prompt:", error);
+    logger.error("Error generating Novita prompt:", error);
     return {
       id: uuidv4(),
       prompt: '',

@@ -14,6 +14,7 @@ export const API_PROVIDERS = {
 };
 
 import { encryptString, decryptString } from '@/utils/cryptoUtils';
+import { logger } from '@/utils/logger';
 // This service manages API key storage and retrieval, ensuring keys are encrypted at rest.
 // It also handles error cases and user feedback for secure and robust UX.
 
@@ -46,7 +47,7 @@ export const getApiKey = async (provider: string): Promise<string> => {
       try {
         decryptedKey = await decryptString(encryptedKey);
       } catch (e) {
-        console.warn('Failed to decrypt API key, possibly legacy/plaintext:', e);
+        logger.warn('Failed to decrypt API key, possibly legacy/plaintext:', e);
         // fallback to plaintext (legacy)
         decryptedKey = encryptedKey;
       }
@@ -71,7 +72,7 @@ export const getApiKey = async (provider: string): Promise<string> => {
  * Only saves to localStorage since we're running completely locally
  */
 export const saveApiKey = async (provider: string, apiKey: string): Promise<void> => {
-  console.log(`Saving ${provider} API key:`, apiKey ? "Key provided" : "No key provided");
+  logger.log(`Saving ${provider} API key:`, apiKey ? "Key provided" : "No key provided");
   try {
     // Encrypt before saving
     const encryptedKey = await encryptString(apiKey);

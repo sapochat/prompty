@@ -9,6 +9,7 @@ import { generateOpenRouterPrompt, saveApiKey as saveOpenRouterApiKey, getApiKey
 import { getHistory, deleteFromHistory, clearHistory, savePromptToHistory } from './promptHistoryService';
 import { getDefaultConfig } from '@/components/category/CategoryUtils';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/utils/logger';
 
 // Re-export all the functions and constants for backward compatibility
 export { 
@@ -99,34 +100,34 @@ export const generatePrompt = async (
 
   // If promptCategories is not in config but is provided as a separate argument,
   // make sure to include it in the config
-  const enhancedConfig: any = {
+  const enhancedConfig: PromptConfigWithCategories = {
     ...config,
     promptCategories: config.promptCategories || promptCategories
   };
-  
+
   // Log the categories to verify they're being passed correctly
-  console.log(`Generating prompt with model ${model.provider} (${model.id}) and ${enhancedConfig.promptCategories?.length || 0} categories`);
+  logger.log(`Generating prompt with model ${model.provider} (${model.id}) and ${enhancedConfig.promptCategories?.length || 0} categories`);
 
   const batchId = count > 1 ? uuidv4() : undefined;
   const results: ApiResponse[] = [];
-  
+
   for (let i = 0; i < count; i++) {
     let result = null;
-    
+
     // Add slight variation to config for each batch item to ensure different results
-    const batchConfig: any = { ...enhancedConfig };
-    
+    const batchConfig: PromptConfigWithCategories = { ...enhancedConfig };
+
     if (count > 1 && i > 0) {
       // For second and third items in batch, add variation hints to ensure different outputs
-      const variationHint = i === 1 ? 
-        "Please provide a completely different variation with alternative elements and style." : 
+      const variationHint = i === 1 ?
+        "Please provide a completely different variation with alternative elements and style." :
         "Please create a third distinct variation with unique elements and approach.";
-      
-      batchConfig.extraDetails = batchConfig.extraDetails ? 
-        `${batchConfig.extraDetails} [Batch variation ${i+1}/${count}: ${variationHint}]` : 
+
+      batchConfig.extraDetails = batchConfig.extraDetails ?
+        `${batchConfig.extraDetails} [Batch variation ${i+1}/${count}: ${variationHint}]` :
         `[Batch variation ${i+1}/${count}: ${variationHint}]`;
     }
-    
+
     if (model.provider === 'openai') {
       result = await generateOpenAIPrompt(batchConfig);
     } else if (model.provider === 'anthropic') {
@@ -141,19 +142,15 @@ export const generatePrompt = async (
       console.error("Provider not supported");
       continue;
     }
-    
+
     if (result) {
       results.push(result);
-      
+
       if (!result.error) {
         // Save the prompt to history for all providers
         // Extract a clean PromptConfig without promptCategories for history storage
-        const historyConfig: PromptConfig = { ...config };
-        // Need to delete promptCategories because it's not in the PromptConfig type
-        if ('promptCategories' in historyConfig) {
-          delete (historyConfig as any).promptCategories;
-        }
-        
+        const { promptCategories: _categories, ...historyConfig } = config;
+
         await savePromptToHistory(result.prompt, historyConfig, model.name, batchId);
       }
     }

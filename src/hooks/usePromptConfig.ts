@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { usePromptStore } from '@/stores';
 import type { PromptConfig } from '@/types/prompt';
+import { logger } from '@/utils/logger';
 
 // Keep event for backward compatibility during migration
 // TODO: Remove custom event once all consumers use Zustand directly
@@ -8,7 +9,7 @@ export const PROMPT_CONFIG_LOADED_EVENT = 'promptConfigLoaded';
 
 // Function to dispatch the prompt config loaded event
 export const dispatchPromptConfigLoadedEvent = (config: PromptConfig) => {
-  console.log("Dispatching prompt config loaded event with:", config);
+  logger.log("Dispatching prompt config loaded event with:", config);
   const event = new CustomEvent(PROMPT_CONFIG_LOADED_EVENT, { detail: config });
   window.dispatchEvent(event);
 };

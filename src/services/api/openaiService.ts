@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { promptCategories } from "@/utils/promptData";
 import { toast } from 'sonner';
 import { getApiKey as getProviderApiKey, saveApiKey as saveProviderApiKey, API_PROVIDERS } from '../apiKeyService';
+import { logger } from '@/utils/logger';
 
 // Cache for storing generated prompts to avoid redundant API calls
 const promptCache = new Map<string, {prompt: string, timestamp: number}>();
@@ -37,7 +38,7 @@ export const generateOpenAIPrompt = async (config: PromptConfig): Promise<ApiRes
     const cachedResult = promptCache.get(cacheKey);
     
     if (cachedResult && (Date.now() - cachedResult.timestamp) < CACHE_EXPIRY) {
-      console.log('Using cached prompt result');
+      logger.log('Using cached prompt result');
       
       // Create API response from cache
       const apiResponse: ApiResponse = {
@@ -68,7 +69,7 @@ export const generateOpenAIPrompt = async (config: PromptConfig): Promise<ApiRes
     const loadingToast = toast.loading('Generating prompt with OpenAI...');
     
     // Make a direct API call - no Supabase Edge Function needed
-    console.log('Making direct OpenAI API call for prompt generation');
+    logger.log('Making direct OpenAI API call for prompt generation');
     
     // Enhanced system prompt that specifically asks NOT to use section titles or headers
     const systemPrompt = 
@@ -211,19 +212,20 @@ export const generateOpenAIPrompt = async (config: PromptConfig): Promise<ApiRes
       // No longer saving to history here - handled by promptService.ts
       toast.success("Prompt generated successfully!");
       return apiResponse;
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.dismiss(loadingToast);
-      console.error("Error in direct OpenAI API call:", error);
+      logger.error("Error in direct OpenAI API call:", error);
       throw error;
     }
-  } catch (error: any) {
-    console.error("Error generating prompt with OpenAI:", error);
-    toast.error(`Error: ${error.message || 'Unknown error occurred'}`);
-    
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    logger.error("Error generating prompt with OpenAI:", error);
+    toast.error(`Error: ${errorMessage}`);
+
     return {
       id: uuidv4(),
       prompt: '',
-      error: error.message || 'Unknown error occurred',
+      error: errorMessage,
     };
   }
 };

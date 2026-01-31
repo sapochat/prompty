@@ -1,6 +1,7 @@
 import { GeneratedPrompt, PromptConfig } from '@/types/prompt';
 import { v4 as uuidv4 } from 'uuid';
 import { dispatchPromptGeneratedEvent } from "@/hooks/usePromptHistory";
+import { logger } from '@/utils/logger';
 
 /**
  * Save a generated prompt to local history.
@@ -26,7 +27,7 @@ export const savePromptToHistory = async (
     };
     history.unshift(newPrompt);
     localStorage.setItem('promptHistory', JSON.stringify(history));
-    console.log("Prompt saved to local history:", newPrompt);
+    logger.log("Prompt saved to local history:", newPrompt);
     dispatchPromptGeneratedEvent();
   } catch (error) {
     console.error("Error saving prompt to history:", error);
@@ -40,7 +41,7 @@ export const getHistory = async (): Promise<GeneratedPrompt[]> => {
   try {
     // Get history from localStorage
     const history = JSON.parse(localStorage.getItem('promptHistory') || '[]');
-    console.log("Retrieved history from localStorage:", history);
+    logger.log("Retrieved history from localStorage:", history);
     return history;
   } catch (error) {
     console.error("Error retrieving history:", error);

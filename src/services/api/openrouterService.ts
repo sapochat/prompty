@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { promptCategories } from "@/utils/promptData";
 import { toast } from 'sonner';
 import { getApiKey as getProviderApiKey, saveApiKey as saveProviderApiKey, API_PROVIDERS } from '../apiKeyService';
+import { logger } from '@/utils/logger';
 
 // Cache for storing generated prompts to avoid redundant API calls
 const promptCache = new Map<string, {prompt: string, timestamp: number}>();
@@ -70,7 +71,7 @@ export const generateOpenRouterPrompt = async (config: PromptConfig): Promise<Ap
     const cachedResult = promptCache.get(cacheKey);
     
     if (cachedResult && (Date.now() - cachedResult.timestamp) < CACHE_EXPIRY) {
-      console.log('Using cached prompt result');
+      logger.log('Using cached prompt result');
       
       // Create API response from cache
       const apiResponse: ApiResponse = {
@@ -161,7 +162,7 @@ export const generateOpenRouterPrompt = async (config: PromptConfig): Promise<Ap
       "6. DO NOT use section labels, headers, or titles like 'Content:', 'Style:', etc. in your response.\n" +
       "7. DO NOT use bullet points or other formatting in your response.";
 
-    console.log('Calling OpenRouter API');
+    logger.log('Calling OpenRouter API');
     
     // Call the OpenRouter API directly
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -197,8 +198,8 @@ export const generateOpenRouterPrompt = async (config: PromptConfig): Promise<Ap
     }
     
     const data = await response.json();
-    
-    console.log("OpenRouter API response received");
+
+    logger.log("OpenRouter API response received");
     
     if (!data.choices || data.choices.length === 0) {
       console.error('Invalid response from OpenRouter:', data);
@@ -236,14 +237,15 @@ export const generateOpenRouterPrompt = async (config: PromptConfig): Promise<Ap
     toast.success("Prompt generated successfully!");
     return apiResponse;
 
-  } catch (error: any) {
-    console.error("Error generating prompt with OpenRouter:", error);
-    toast.error(`Error: ${error.message || 'Unknown error occurred'}`);
-    
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    logger.error("Error generating prompt with OpenRouter:", error);
+    toast.error(`Error: ${errorMessage}`);
+
     return {
       id: uuidv4(),
       prompt: '',
-      error: error.message || 'Unknown error occurred',
+      error: errorMessage,
     };
   }
 };
