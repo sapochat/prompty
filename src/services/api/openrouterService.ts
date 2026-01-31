@@ -4,24 +4,21 @@ import { promptCategories } from "@/utils/promptData";
 import { toast } from 'sonner';
 import { getApiKey as getProviderApiKey, saveApiKey as saveProviderApiKey, API_PROVIDERS } from '../apiKeyService';
 import { logger } from '@/utils/logger';
+import {
+  fetchWithTimeout,
+  generateCacheKey,
+  getCachedResult,
+  setCacheResult,
+  createCachedResponse,
+  createSuccessResponse,
+  createMissingKeyResponse,
+  handleApiError,
+  cleanPromptText,
+  CacheEntry
+} from './apiUtils';
 
 // Cache for storing generated prompts to avoid redundant API calls
-const promptCache = new Map<string, {prompt: string, timestamp: number}>();
-const CACHE_EXPIRY = 1000 * 60 * 60; // 1 hour cache expiry
-
-// Generate a cache key from prompt config
-const generateCacheKey = (config: PromptConfig): string => {
-  const { model, extraDetails, ...restConfig } = config;
-  const sortedEntries = Object.entries(restConfig)
-    .filter(([_, value]) => value && (!Array.isArray(value) || value.length > 0))
-    .sort(([a], [b]) => a.localeCompare(b));
-  
-  return JSON.stringify({
-    model,
-    extraDetails,
-    categories: sortedEntries
-  });
-};
+const promptCache = new Map<string, CacheEntry>();
 
 /**
  * Retrieves the OpenRouter API key from localStorage
@@ -38,66 +35,19 @@ export const saveApiKey = async (apiKey: string): Promise<void> => {
 };
 
 /**
- * Cleans up prompt text by removing section titles and headers
- */
-const cleanPromptText = (text: string): string => {
-  if (!text) return '';
-  
-  // Remove common prefixes like "Title:", "Prompt:", etc.
-  let cleaned = text
-    .replace(/^(Title|Prompt|Image Prompt|Here's a prompt|Here is a prompt|Description):\s*/i, '')
-    .replace(/^"(.*)"$/, '$1') // Remove quotes if the entire prompt is quoted
-    .trim();
-    
-  // Remove section headers/titles like "Content:", "Setting:", "Style:", etc.
-  cleaned = cleaned
-    .replace(/\b(Content|Character|Style|Setting|Background|Mood|Lighting|Details):\s+/gi, '')
-    .replace(/\n\s*\b(Content|Character|Style|Setting|Background|Mood|Lighting|Details):\s*/gi, '\n\n')
-    .trim();
-  
-  // Replace multiple consecutive newlines with just two (to maintain paragraph separation)
-  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
-  
-  return cleaned;
-};
-
-/**
  * Generates a prompt using the OpenRouter API
  */
 export const generateOpenRouterPrompt = async (config: PromptConfig): Promise<ApiResponse | null> => {
   try {
     // Check cache first
     const cacheKey = generateCacheKey(config);
-    const cachedResult = promptCache.get(cacheKey);
-    
-    if (cachedResult && (Date.now() - cachedResult.timestamp) < CACHE_EXPIRY) {
-      logger.log('Using cached prompt result');
-      
-      // Create API response from cache
-      const apiResponse: ApiResponse = {
-        id: uuidv4(),
-        prompt: cachedResult.prompt,
-      };
-      
-      // Do not save cached responses to history again
-      // This prevents duplicate entries in history
-      toast.success("Prompt generated from cache!");
-      
-      return apiResponse;
-    }
-    
+    const cached = getCachedResult(promptCache, cacheKey);
+    if (cached) return createCachedResponse(cached);
+
     // Get the API key
     const apiKey = await getApiKey();
-    
-    if (!apiKey) {
-      console.error('No OpenRouter API key provided');
-      toast.error("Please add your OpenRouter API key in the settings menu");
-      return {
-        id: uuidv4(),
-        prompt: '',
-        error: 'No OpenRouter API key provided. Please add your API key in the settings.',
-      };
-    }
+
+    if (!apiKey) return createMissingKeyResponse('OpenRouter');
     
     // Show a loading toast with progress indication
     const loadingToast = toast.loading('Generating prompt with OpenRouter...');
@@ -163,9 +113,9 @@ export const generateOpenRouterPrompt = async (config: PromptConfig): Promise<Ap
       "7. DO NOT use bullet points or other formatting in your response.";
 
     logger.log('Calling OpenRouter API');
-    
+
     // Call the OpenRouter API directly
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetchWithTimeout('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -222,30 +172,12 @@ export const generateOpenRouterPrompt = async (config: PromptConfig): Promise<Ap
     }
     
     // Cache the result
-    promptCache.set(cacheKey, {
-      prompt: generatedPrompt,
-      timestamp: Date.now()
-    });
-    
+    setCacheResult(promptCache, cacheKey, generatedPrompt);
+
     // Finalize the response
-    const apiResponse: ApiResponse = {
-      id: uuidv4(),
-      prompt: generatedPrompt,
-    };
-    
-    // No longer saving to history here - handled by promptService.ts
-    toast.success("Prompt generated successfully!");
-    return apiResponse;
+    return createSuccessResponse(generatedPrompt);
 
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    logger.error("Error generating prompt with OpenRouter:", error);
-    toast.error(`Error: ${errorMessage}`);
-
-    return {
-      id: uuidv4(),
-      prompt: '',
-      error: errorMessage,
-    };
+    return handleApiError(error, 'OpenRouter');
   }
 };

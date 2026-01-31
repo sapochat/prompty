@@ -1,27 +1,22 @@
-import { ApiResponse, PromptConfig } from '@/types/prompt';
-import { v4 as uuidv4 } from 'uuid';
+import { PromptConfig } from '@/types/prompt';
 import { promptCategories } from "@/utils/promptData";
 import { toast } from 'sonner';
 import { getApiKey as getProviderApiKey, saveApiKey as saveProviderApiKey, API_PROVIDERS } from '../apiKeyService';
 import { logger } from '@/utils/logger';
+import {
+  fetchWithTimeout,
+  generateCacheKey,
+  getCachedResult,
+  setCacheResult,
+  createCachedResponse,
+  createSuccessResponse,
+  createMissingKeyResponse,
+  handleApiError,
+  CacheEntry
+} from './apiUtils';
 
 // Cache for storing generated prompts to avoid redundant API calls
-const promptCache = new Map<string, {prompt: string, timestamp: number}>();
-const CACHE_EXPIRY = 1000 * 60 * 60; // 1 hour cache expiry
-
-// Generate a cache key from prompt config
-const generateCacheKey = (config: PromptConfig): string => {
-  const { model, extraDetails, ...restConfig } = config;
-  const sortedEntries = Object.entries(restConfig)
-    .filter(([_, value]) => value && (!Array.isArray(value) || value.length > 0))
-    .sort(([a], [b]) => a.localeCompare(b));
-  
-  return JSON.stringify({
-    model,
-    extraDetails,
-    categories: sortedEntries
-  });
-};
+const promptCache = new Map<string, CacheEntry>();
 
 /**
  * Retrieves the Anthropic API key
@@ -37,38 +32,17 @@ export const saveApiKey = async (apiKey: string): Promise<void> => {
   return saveProviderApiKey(API_PROVIDERS.ANTHROPIC, apiKey);
 };
 
-export const generateAnthropicPrompt = async (config: PromptConfig): Promise<ApiResponse | null> => {
+export const generateAnthropicPrompt = async (config: PromptConfig) => {
   try {
     // Check cache first
     const cacheKey = generateCacheKey(config);
-    const cachedResult = promptCache.get(cacheKey);
-    
-    if (cachedResult && (Date.now() - cachedResult.timestamp) < CACHE_EXPIRY) {
-      logger.log('Using cached prompt result');
-      
-      // Create API response from cache
-      const apiResponse: ApiResponse = {
-        id: uuidv4(),
-        prompt: cachedResult.prompt,
-      };
-      
-      // No longer saving to history here - handled by promptService.ts
-      toast.success("Prompt generated from cache!");
-      
-      return apiResponse;
-    }
+    const cached = getCachedResult(promptCache, cacheKey);
+    if (cached) return createCachedResponse(cached);
 
     // Get API key
     const apiKey = await getApiKey();
-    
-    if (!apiKey) {
-      toast.error("Please add your Anthropic API key in settings");
-      return {
-        id: uuidv4(),
-        prompt: '',
-        error: 'Anthropic API key not found. Please add your API key in settings.',
-      };
-    }
+
+    if (!apiKey) return createMissingKeyResponse('Anthropic');
     
     // Show a loading toast with progress indication
     const loadingToast = toast.loading('Generating prompt with Claude...');
@@ -108,7 +82,7 @@ export const generateAnthropicPrompt = async (config: PromptConfig): Promise<Api
     }
     
     // Make direct API call to Anthropic
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -116,7 +90,7 @@ export const generateAnthropicPrompt = async (config: PromptConfig): Promise<Api
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: config.model || 'claude-3-sonnet-20240229',
+        model: config.model || 'claude-4-5-sonnet-latest',
         max_tokens: 800,
         temperature: 0.7,
         system: systemPrompt,
@@ -136,32 +110,13 @@ export const generateAnthropicPrompt = async (config: PromptConfig): Promise<Api
     
     const data = await response.json();
     const generatedPrompt = data.content[0].text;
-    
-    // Cache the result
-    promptCache.set(cacheKey, {
-      prompt: generatedPrompt,
-      timestamp: Date.now()
-    });
-    
-    // Create API response
-    const apiResponse: ApiResponse = {
-      id: uuidv4(),
-      prompt: generatedPrompt,
-    };
-    
-    // No longer saving to history here - handled by promptService.ts
-    toast.success("Prompt generated successfully!");
-    return apiResponse;
-  } catch (error: unknown) {
-    // Handle any errors that occurred
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    logger.error("Error generating prompt with Anthropic:", errorMessage);
-    toast.error(`Error: ${errorMessage}`);
 
-    return {
-      id: uuidv4(),
-      prompt: '',
-      error: errorMessage,
-    };
+    // Cache the result
+    setCacheResult(promptCache, cacheKey, generatedPrompt);
+
+    // No longer saving to history here - handled by promptService.ts
+    return createSuccessResponse(generatedPrompt);
+  } catch (error: unknown) {
+    return handleApiError(error, 'Anthropic');
   }
 };

@@ -1,27 +1,22 @@
-import { ApiResponse, PromptConfig } from '@/types/prompt';
-import { v4 as uuidv4 } from 'uuid';
+import { PromptConfig } from '@/types/prompt';
 import { promptCategories } from "@/utils/promptData";
 import { toast } from 'sonner';
 import { getApiKey as getProviderApiKey, saveApiKey as saveProviderApiKey, API_PROVIDERS } from '../apiKeyService';
 import { logger } from '@/utils/logger';
+import {
+  fetchWithTimeout,
+  generateCacheKey,
+  getCachedResult,
+  setCacheResult,
+  createCachedResponse,
+  createSuccessResponse,
+  createMissingKeyResponse,
+  handleApiError,
+  CacheEntry
+} from './apiUtils';
 
 // Cache for storing generated prompts to avoid redundant API calls
-const promptCache = new Map<string, {prompt: string, timestamp: number}>();
-const CACHE_EXPIRY = 1000 * 60 * 60; // 1 hour cache expiry
-
-// Generate a cache key from prompt config
-const generateCacheKey = (config: PromptConfig): string => {
-  const { model, extraDetails, ...restConfig } = config;
-  const sortedEntries = Object.entries(restConfig)
-    .filter(([_, value]) => value && (!Array.isArray(value) || value.length > 0))
-    .sort(([a], [b]) => a.localeCompare(b));
-  
-  return JSON.stringify({
-    model,
-    extraDetails,
-    categories: sortedEntries
-  });
-};
+const promptCache = new Map<string, CacheEntry>();
 
 export const getApiKey = async (): Promise<string> => {
   return getProviderApiKey(API_PROVIDERS.HUGGINGFACE);
@@ -31,38 +26,17 @@ export const saveApiKey = async (apiKey: string): Promise<void> => {
   return saveProviderApiKey(API_PROVIDERS.HUGGINGFACE, apiKey);
 };
 
-export const generateHuggingfacePrompt = async (config: PromptConfig): Promise<ApiResponse | null> => {
+export const generateHuggingfacePrompt = async (config: PromptConfig) => {
   try {
     // Check cache first
     const cacheKey = generateCacheKey(config);
-    const cachedResult = promptCache.get(cacheKey);
-    
-    if (cachedResult && (Date.now() - cachedResult.timestamp) < CACHE_EXPIRY) {
-      logger.log('Using cached prompt result');
-      
-      // Create API response from cache
-      const apiResponse: ApiResponse = {
-        id: uuidv4(),
-        prompt: cachedResult.prompt,
-      };
-      
-      // No longer saving to history here - handled by promptService.ts
-      toast.success("Prompt generated from cache!");
-      
-      return apiResponse;
-    }
-    
+    const cached = getCachedResult(promptCache, cacheKey);
+    if (cached) return createCachedResponse(cached);
+
     // Get API key
     const apiKey = await getApiKey();
-    
-    if (!apiKey) {
-      toast.error("Huggingface API key not found. Please add it in settings.");
-      return {
-        id: uuidv4(),
-        prompt: '',
-        error: 'Huggingface API key not found. Please add it in settings.',
-      };
-    }
+
+    if (!apiKey) return createMissingKeyResponse('HuggingFace');
     
     // Show a loading toast with progress indication
     const loadingToast = toast.loading('Generating prompt with Huggingface...');
@@ -104,10 +78,10 @@ export const generateHuggingfacePrompt = async (config: PromptConfig): Promise<A
       userPrompt;
     
     // Default to Mistral 7B if no model specified
-    const modelToUse = config.model || 'mistralai/Mistral-7B-Instruct-v0.2';
+    const modelToUse = config.model || 'mistralai/Mistral-7B-Instruct-v0.3';
     const apiUrl = `https://api-inference.huggingface.co/models/${modelToUse}`;
-    
-    const response = await fetch(apiUrl, {
+
+    const response = await fetchWithTimeout(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -152,30 +126,11 @@ export const generateHuggingfacePrompt = async (config: PromptConfig): Promise<A
     const cleanedPrompt = generatedPrompt.replace(fullPrompt, '').trim();
     
     // Cache the result
-    promptCache.set(cacheKey, {
-      prompt: cleanedPrompt,
-      timestamp: Date.now()
-    });
-    
-    // Finalize the response
-    const apiResponse: ApiResponse = {
-      id: uuidv4(),
-      prompt: cleanedPrompt,
-    };
+    setCacheResult(promptCache, cacheKey, cleanedPrompt);
 
     // No longer saving to history here - handled by promptService.ts
-    toast.success("Prompt generated successfully!");
-    return apiResponse;
+    return createSuccessResponse(cleanedPrompt);
   } catch (error: unknown) {
-    // Handle any errors that occurred
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    logger.error("Error generating prompt with Huggingface:", errorMessage);
-    toast.error(`Error: ${errorMessage}`);
-
-    return {
-      id: uuidv4(),
-      prompt: '',
-      error: errorMessage,
-    };
+    return handleApiError(error, 'HuggingFace');
   }
 };
