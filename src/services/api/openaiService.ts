@@ -129,14 +129,14 @@ export const generateOpenAIPrompt = async (config: PromptConfig): Promise<ApiRes
       // Check if the response was successful
       if (!response.ok) {
         const errorData = await response.json();
-        console.error(`OpenAI API error (${response.status}):`, errorData);
+        logger.error(`OpenAI API error (${response.status}):`, errorData);
         throw new Error(`OpenAI API error: ${response.status}`);
       }
 
       const data = await response.json();
 
       if (!data.choices || data.choices.length === 0) {
-        console.error('Invalid response from OpenAI:', data);
+        logger.error('Invalid response from OpenAI:', data);
         throw new Error('Invalid response from OpenAI API');
       }
 

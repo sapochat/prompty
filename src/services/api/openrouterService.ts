@@ -138,7 +138,7 @@ export const generateOpenRouterPrompt = async (config: PromptConfig): Promise<Ap
     
     if (!response.ok) {
       const errorData = await response.json();
-      console.error(`OpenRouter API error (${response.status}):`, errorData);
+      logger.error(`OpenRouter API error (${response.status}):`, errorData);
       
       return {
         id: uuidv4(),
@@ -152,7 +152,7 @@ export const generateOpenRouterPrompt = async (config: PromptConfig): Promise<Ap
     logger.log("OpenRouter API response received");
     
     if (!data.choices || data.choices.length === 0) {
-      console.error('Invalid response from OpenRouter:', data);
+      logger.error('Invalid response from OpenRouter:', data);
       
       return {
         id: uuidv4(),
