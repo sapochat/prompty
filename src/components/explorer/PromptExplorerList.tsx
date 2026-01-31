@@ -1,12 +1,9 @@
-
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Copy, Trash, Settings, FileText } from 'lucide-react';
+import { Copy, Trash2, Settings, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { PromptHistoryItem } from '@/types/prompt';
 
@@ -15,19 +12,20 @@ interface PromptExplorerListProps {
   onDelete: (id: string) => void;
 }
 
-const PromptExplorerList: React.FC<PromptExplorerListProps> = ({ 
+const PromptExplorerList: React.FC<PromptExplorerListProps> = ({
   prompts,
   onDelete
 }) => {
   const navigate = useNavigate();
-  
-  // No prompts state
+
   if (prompts.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg bg-muted/30">
-        <FileText className="w-10 h-10 mb-4 text-muted-foreground" />
-        <h3 className="mb-1 text-lg font-medium">No prompts found</h3>
-        <p className="text-sm text-muted-foreground">
+      <div className="flex-center flex-col py-16">
+        <FileText className="h-10 w-10 text-foreground-subtle mb-4" />
+        <p className="font-display text-lg font-medium text-foreground mb-2">
+          No prompts found
+        </p>
+        <p className="text-sm text-foreground-muted text-center max-w-xs">
           Your generated prompts will appear here.
         </p>
       </div>
@@ -36,100 +34,98 @@ const PromptExplorerList: React.FC<PromptExplorerListProps> = ({
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied!",
-      description: "Prompt copied to clipboard"
-    });
+    toast.success("Copied to clipboard");
   };
 
   const loadPromptSettings = (promptId: string) => {
-    // Navigate to the main page with the prompt ID to load
     navigate(`/?loadPrompt=${promptId}`);
   };
 
   const handleDelete = (id: string) => {
     onDelete(id);
-    toast({
-      title: "Deleted",
-      description: "Prompt was deleted successfully"
-    });
+    toast.success("Prompt deleted");
   };
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {prompts.map((prompt) => (
-        <Card key={prompt.id} className="overflow-hidden border">
-          <CardContent className="p-0">
-            <div className="p-4 border-b">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  {prompt.modelUsed && (
-                    <Badge variant="outline" className="px-2 py-0">
-                      {prompt.modelUsed}
-                    </Badge>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    {prompt.createdAt ? format(new Date(prompt.createdAt), 'MMM d, yyyy h:mm a') : 'No date'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="max-h-32 overflow-y-auto mb-3">
-                <p className="text-sm">{prompt.prompt}</p>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyToClipboard(prompt.prompt)}
-                  className="gap-1"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  Copy
-                </Button>
-                
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => loadPromptSettings(prompt.id)}
-                    className="gap-1"
-                  >
-                    <Settings className="w-3.5 h-3.5" />
-                    Load settings
-                  </Button>
-                  
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-1">
-                        <Trash className="w-3.5 h-3.5" />
-                        Delete
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete prompt</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this prompt? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={() => handleDelete(prompt.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
+        <article key={prompt.id} className="content-item">
+          {/* Header */}
+          <div className="item-header mb-3">
+            <div className="flex items-center gap-2">
+              {prompt.modelUsed && (
+                <span className="badge-primary">
+                  {prompt.modelUsed}
+                </span>
+              )}
+              <time className="item-timestamp">
+                {prompt.createdAt ? format(new Date(prompt.createdAt), 'MMM d, yyyy') : 'No date'}
+              </time>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Content */}
+          <div className="max-h-28 overflow-y-auto mb-4">
+            <p className="text-sm text-foreground-muted leading-relaxed">
+              {prompt.prompt}
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-between pt-3 border-t border-border/5">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => copyToClipboard(prompt.prompt)}
+              className="gap-1.5 text-foreground-muted hover:text-foreground"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              Copy
+            </Button>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => loadPromptSettings(prompt.id)}
+                className="gap-1.5 text-primary hover:text-primary-light"
+              >
+                <Settings className="h-3.5 w-3.5" />
+                Load
+              </Button>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-foreground-subtle hover:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-card border-border/10">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="font-display">Delete prompt</AlertDialogTitle>
+                    <AlertDialogDescription className="text-foreground-muted">
+                      Are you sure you want to delete this prompt? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="btn-secondary">Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => handleDelete(prompt.id)}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+        </article>
       ))}
     </div>
   );

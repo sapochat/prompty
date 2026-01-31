@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Search, FileText } from 'lucide-react';
+import { ArrowLeft, Search } from 'lucide-react';
 
 interface PromptExplorerHeaderProps {
   searchTerm: string;
@@ -18,31 +17,31 @@ const PromptExplorerHeader: React.FC<PromptExplorerHeaderProps> = ({
   onBack
 }) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={onBack}
-          className="h-9 w-9"
+          className="h-10 w-10 text-foreground-muted hover:text-foreground hover:bg-background-elevated"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-5 w-5" />
         </Button>
-        
+
         <div>
-          <h1 className="text-2xl font-bold gradient-text">Prompt Explorer</h1>
-          <p className="text-muted-foreground">
-            Explore {promptCount} {promptCount === 1 ? 'prompt' : 'prompts'} from your history
+          <h1 className="heading-1 mb-1">Prompt Explorer</h1>
+          <p className="text-sm text-foreground-muted">
+            Browse {promptCount} {promptCount === 1 ? 'prompt' : 'prompts'} from your history
           </p>
         </div>
       </div>
-      
+
       <div className="relative max-w-md">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-subtle" />
         <Input
           type="text"
           placeholder="Search prompts..."
-          className="pl-9"
+          className="input-editorial pl-10"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
