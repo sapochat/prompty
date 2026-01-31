@@ -24,32 +24,34 @@ All data is stored locally in your browser - your API are only used to authentic
 
 ## Supported AI Providers and Models
 
+Each provider offers a tiered selection of models (fast, balanced, powerful).
+
 ### OpenAI
-- **Models**: GPT-4, GPT-3.5-Turbo
+- **Models**: GPT-4.1 Mini (fast), GPT-5.1 (balanced), GPT-5.2 (powerful)
 - **API Key**: [Get your OpenAI API key](https://platform.openai.com/api-keys)
 - **Pricing**: [OpenAI pricing information](https://openai.com/pricing)
 - **Best for**: High-quality, coherent, and reliable prompts
 
 ### Anthropic
-- **Models**: Claude 3 Opus, Claude 3 Sonnet, Claude 3 Haiku
+- **Models**: Claude 4.5 Haiku (fast), Claude 4.5 Sonnet (balanced), Claude 4.5 Opus (powerful)
 - **API Key**: [Get your Anthropic API key](https://console.anthropic.com/account/keys)
 - **Pricing**: [Anthropic pricing information](https://www.anthropic.com/pricing)
 - **Best for**: Detailed, nuanced prompts with creative elements
 
 ### HuggingFace
-- **Models**: Various open models including Mistral, Llama, Falcon, etc.
+- **Models**: Mistral 7B v0.3 (fast), Llama 3 8B (balanced), Qwen 2.5 72B (powerful)
 - **API Key**: [Get your HuggingFace API key](https://huggingface.co/settings/tokens)
 - **Pricing**: [HuggingFace Inference API pricing](https://huggingface.co/pricing)
 - **Best for**: Access to a variety of open-source models
 
 ### Novita AI
-- **Models**: Llama 4 Maverick
+- **Models**: Llama 3.2 3B (fast), Llama 3.3 70B (balanced), Llama 4 Scout 17B (powerful)
 - **API Key**: [Get your Novita API key](https://novita.ai/)
 - **Pricing**: [Novita pricing information](https://novita.ai/pricing)
-- **Best for**: State-of-the-art image generation prompts
+- **Best for**: Cost-effective access to Llama models
 
 ### OpenRouter
-- **Models**: Access to numerous models across providers
+- **Models**: Gemini 2.5 Flash (fast), Gemini 3 Flash (balanced), Gemini 3 Pro (powerful)
 - **API Key**: [Get your OpenRouter API key](https://openrouter.ai/keys)
 - **Pricing**: [OpenRouter pricing information](https://openrouter.ai/pricing)
 - **Best for**: Flexibility to access multiple models through a single API
