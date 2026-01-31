@@ -1,10 +1,9 @@
+import { useCallback } from 'react';
+import { usePromptStore } from '@/stores';
+import type { PromptConfig } from '@/types/prompt';
 
-import { useState, useEffect, useCallback } from 'react';
-import { PromptConfig } from '@/types/prompt';
-import { getUserConfig, saveUserConfig } from '@/services/promptService';
-import { getDefaultConfig } from '@/components/category/CategoryUtils';
-
-// Create a custom event for prompt config loading
+// Keep event for backward compatibility during migration
+// TODO: Remove custom event once all consumers use Zustand directly
 export const PROMPT_CONFIG_LOADED_EVENT = 'promptConfigLoaded';
 
 // Function to dispatch the prompt config loaded event
@@ -14,101 +13,55 @@ export const dispatchPromptConfigLoadedEvent = (config: PromptConfig) => {
   window.dispatchEvent(event);
 };
 
-export const usePromptConfig = (initialConfig?: PromptConfig) => {
-  const [promptConfig, setPromptConfig] = useState<PromptConfig>(initialConfig || getDefaultConfig());
-  const [extraDetails, setExtraDetails] = useState<string>('');
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+/**
+ * Hook for managing prompt configuration state.
+ * Now backed by Zustand store with automatic persistence.
+ *
+ * @param _initialConfig - Deprecated: Initial config is now ignored since Zustand handles persistence
+ */
+export const usePromptConfig = (_initialConfig?: PromptConfig) => {
+  const {
+    config: promptConfig,
+    extraDetails,
+    prefixText,
+    setConfig,
+    setExtraDetails,
+    setPrefixText,
+    resetConfig,
+    loadConfig
+  } = usePromptStore();
 
-  // Load user config initially
-  const loadUserConfig = useCallback(async () => {
-    if (initialConfig) {
-      setExtraDetails(initialConfig.extraDetails || '');
-      setIsInitialized(true);
-      return;
+  // Maintain backward-compatible setter that accepts both values and updater functions
+  const setPromptConfig = useCallback((
+    newConfigOrUpdater: PromptConfig | ((prev: PromptConfig) => PromptConfig)
+  ) => {
+    if (typeof newConfigOrUpdater === 'function') {
+      // Handle updater function pattern: setPromptConfig(prev => ({...prev, ...changes}))
+      const updatedConfig = newConfigOrUpdater(promptConfig);
+      setConfig(updatedConfig);
+    } else {
+      // Handle direct value pattern: setPromptConfig(newConfig)
+      setConfig(newConfigOrUpdater);
     }
+  }, [promptConfig, setConfig]);
 
-    try {
-      const config = await getUserConfig();
-      if (config) {
-        console.log("Loaded user config:", config);
-        setPromptConfig(prev => ({
-          ...prev,
-          ...config,
-          model: config.model || prev.model,
-        }));
-        
-        if (config.extraDetails) {
-          setExtraDetails(config.extraDetails);
-        }
-      } else {
-        console.log("No user config found, using default config");
-      }
-    } catch (error) {
-      console.error("Error loading user config:", error);
-    } finally {
-      setIsInitialized(true);
-    }
-  }, [initialConfig]);
-
-  // Save prompt config when it changes
-  useEffect(() => {
-    if (!isInitialized) return;
-    
-    const saveConfig = async () => {
-      try {
-        const configToSave = {
-          ...promptConfig,
-          extraDetails,
-        };
-        
-        await saveUserConfig(configToSave);
-        console.log("Saved user config:", configToSave);
-      } catch (error) {
-        console.error("Error saving user config:", error);
-      }
-    };
-    
-    const timeoutId = setTimeout(saveConfig, 1000);
-    return () => clearTimeout(timeoutId);
-  }, [promptConfig, extraDetails, isInitialized]);
-
-  // Handle the promptConfigLoaded event
-  useEffect(() => {
-    const handlePromptConfigLoaded = (event: CustomEvent<PromptConfig>) => {
-      console.log("Prompt config loaded event received with config:", event.detail);
-      const config = event.detail;
-      
-      setPromptConfig(prev => ({
-        ...prev,
-        ...config,
-        model: config.model || prev.model,
-      }));
-      
-      setExtraDetails(config.extraDetails || '');
-    };
-
-    // Add event listener
-    window.addEventListener(
-      PROMPT_CONFIG_LOADED_EVENT, 
-      handlePromptConfigLoaded as EventListener
-    );
-
-    // Initial load
-    loadUserConfig();
-
-    return () => {
-      window.removeEventListener(
-        PROMPT_CONFIG_LOADED_EVENT, 
-        handlePromptConfigLoaded as EventListener
-      );
-    };
-  }, [loadUserConfig]);
+  // Handle loading a complete config (from history, etc.)
+  const handleLoadConfig = useCallback((config: PromptConfig) => {
+    loadConfig(config);
+    // Dispatch event for backward compatibility with components listening for this event
+    dispatchPromptConfigLoadedEvent(config);
+  }, [loadConfig]);
 
   return {
     promptConfig,
     setPromptConfig,
     extraDetails,
     setExtraDetails,
-    isInitialized
+    prefixText,
+    setPrefixText,
+    resetConfig,
+    loadConfig: handleLoadConfig,
+    // isInitialized is always true with Zustand (sync hydration from localStorage)
+    isInitialized: true,
   };
 };
