@@ -124,7 +124,7 @@ export const generateOpenRouterPrompt = async (config: PromptConfig): Promise<Ap
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: config.model,
+        model: config.model || 'google/gemini-2.5-flash',
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }

@@ -12,6 +12,7 @@ import {
   createSuccessResponse,
   createMissingKeyResponse,
   handleApiError,
+  cleanPromptText,
   CacheEntry
 } from './apiUtils';
 
@@ -123,7 +124,7 @@ export const generateHuggingfacePrompt = async (config: PromptConfig) => {
     }
     
     // Extract just the generated part, not the input prompt
-    const cleanedPrompt = generatedPrompt.replace(fullPrompt, '').trim();
+    const cleanedPrompt = cleanPromptText(generatedPrompt.replace(fullPrompt, '').trim());
     
     // Cache the result
     setCacheResult(promptCache, cacheKey, cleanedPrompt);

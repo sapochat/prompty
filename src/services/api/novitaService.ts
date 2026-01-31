@@ -1,4 +1,5 @@
 import { ApiResponse, Category, PromptConfigWithCategories } from '@/types/prompt';
+import { toast } from 'sonner';
 import { getApiKey as getProviderApiKey, saveApiKey as saveProviderApiKey, API_PROVIDERS } from '../apiKeyService';
 import { logger } from '@/utils/logger';
 import {
@@ -27,6 +28,9 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
 
     const apiKey = await getApiKey();
     if (!apiKey) return createMissingKeyResponse('Novita');
+
+    // Show a loading toast
+    const loadingToast = toast.loading('Generating prompt with Novita...');
 
     // Create improved system prompt with clear constraints for Llama 4
     const systemPrompt =
@@ -255,6 +259,7 @@ export const generateNovitaPrompt = async (config: PromptConfigWithCategories): 
     // Use our enhanced Llama cleaning function
     const cleanedText = cleanLlamaResponse(generatedText);
 
+    toast.dismiss(loadingToast);
     setCacheResult(promptCache, cacheKey, cleanedText);
     return createSuccessResponse(cleanedText.trim());
   } catch (error) {

@@ -12,6 +12,7 @@ import {
   createSuccessResponse,
   createMissingKeyResponse,
   handleApiError,
+  cleanPromptText,
   CacheEntry
 } from './apiUtils';
 
@@ -109,7 +110,7 @@ export const generateAnthropicPrompt = async (config: PromptConfig) => {
     }
     
     const data = await response.json();
-    const generatedPrompt = data.content[0].text;
+    const generatedPrompt = cleanPromptText(data.content[0].text);
 
     // Cache the result
     setCacheResult(promptCache, cacheKey, generatedPrompt);
