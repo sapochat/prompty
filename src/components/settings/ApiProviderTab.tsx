@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AIModel } from '@/types/prompt';
 import ApiKeyInput from './ApiKeyInput';
@@ -17,9 +16,6 @@ interface ApiProviderTabProps {
   isLoading: boolean;
 }
 
-/**
- * A tab for a specific API provider in the settings dialog
- */
 const ApiProviderTab: React.FC<ApiProviderTabProps> = ({
   provider,
   displayName,
@@ -33,9 +29,9 @@ const ApiProviderTab: React.FC<ApiProviderTabProps> = ({
   isLoading
 }) => {
   const isModelEnabled = (modelId: string) => enabledModels.includes(modelId);
-  
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <ApiKeyInput
         id={`${provider}-api-key`}
         provider={displayName}
@@ -45,10 +41,14 @@ const ApiProviderTab: React.FC<ApiProviderTabProps> = ({
         disabled={isLoading}
         linkUrl={linkUrl}
       />
-      
-      <div className="mt-4 pt-2 border-t">
-        <h3 className="font-medium mb-2 text-sm">Available Models</h3>
-        <div className="space-y-1">
+
+      <div className="divider" />
+
+      <div>
+        <h3 className="font-display text-sm font-medium text-foreground mb-3">
+          Available Models
+        </h3>
+        <div className="space-y-2">
           {models.map(model => (
             <ProvidersToggle
               key={model.id}

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Category, PromptConfig } from '@/types/prompt';
 import { CheckIcon, ChevronDownIcon, Shuffle } from 'lucide-react';
@@ -40,7 +39,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
   const handleToggleOption = (categoryId: string, optionValue: string) => {
     const currentValues = selectedOptions[categoryId as keyof PromptConfig] || [];
     const currentArray = Array.isArray(currentValues) ? currentValues : [currentValues].filter(Boolean);
-    
+
     if (currentArray.includes(optionValue)) {
       const newValues = currentArray.filter(value => value !== optionValue);
       onOptionSelect(categoryId, newValues);
@@ -51,10 +50,8 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 
   const handleRandomSelect = () => {
     if (!category || category.options.length === 0) return;
-    
     const randomIndex = Math.floor(Math.random() * category.options.length);
     const randomOption = category.options[randomIndex];
-    
     onOptionSelect(category.id, [randomOption.value]);
     setIsOpen(false);
   };
@@ -71,66 +68,88 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
 
   const getCategorySelectionLabel = (): string => {
     const count = getCategorySelectionCount();
-    if (count === 0) return 'Select options...';
+    if (count === 0) return 'Select...';
     return `${count} selected`;
   };
+
+  const selectionCount = getCategorySelectionCount();
 
   return (
     <div className="space-y-2">
       <div className="flex gap-2">
-        <Popover
-          open={isOpen}
-          onOpenChange={setIsOpen}
-        >
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="ghost"
               role="combobox"
               className={cn(
-                "w-full justify-between h-auto min-h-11 py-2 px-4 bg-[#1a1a2e] border border-[#2a2a3a] text-white shadow-md rounded-lg hover:bg-[#252538] focus-visible:ring-1 focus-visible:ring-[#3a3a4a]",
-                isMobile ? "text-sm" : ""
+                "w-full justify-between h-auto min-h-12 py-2.5 px-4",
+                "bg-background-elevated border border-border/10",
+                "text-foreground rounded-md",
+                "hover:bg-background-surface hover:border-border/20",
+                "focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/30",
+                "transition-all duration-200",
+                selectionCount > 0 && "border-primary/20 bg-primary/5",
+                isMobile && "text-sm"
               )}
               disabled={isLoading}
               size={isMobile ? "sm" : "default"}
             >
-              <div className="flex flex-col items-start">
+              <div className="flex flex-col items-start gap-0.5">
                 <span className={cn(
-                  "text-xs text-muted-foreground",
-                  isMobile ? "truncate max-w-[120px]" : ""
+                  "text-xs text-foreground-muted font-medium",
+                  isMobile && "truncate max-w-[120px]"
                 )}>
                   {category.name}
                 </span>
                 <span className={cn(
-                  "text-sm truncate",
-                  isMobile ? "max-w-[120px]" : "max-w-[180px]"
+                  "text-sm",
+                  selectionCount > 0 ? "text-primary" : "text-foreground-subtle",
+                  isMobile ? "max-w-[120px]" : "max-w-[180px]",
+                  "truncate"
                 )}>
                   {getCategorySelectionLabel()}
                 </span>
               </div>
-              <ChevronDownIcon className="h-4 w-4 shrink-0 opacity-50" />
+              <ChevronDownIcon className="h-4 w-4 shrink-0 text-foreground-subtle" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className={cn(
-            "p-4 bg-[#1a1a2e] border border-[#2a2a3a] shadow-md rounded-lg",
-            isMobile ? "w-[90vw] max-w-[320px]" : "w-[340px]"
-          )} align="start" sideOffset={4} side="bottom" avoidCollisions={false} sticky="always">
-            <Command>
-              <CommandInput placeholder={`Search ${category.name.toLowerCase()}...`} className="h-9 bg-[#151525] text-gray-300 placeholder:text-gray-500 border-b border-[#2a2a3a]" />
+
+          <PopoverContent
+            className={cn(
+              "p-0 bg-popover border border-border/10 shadow-editorial-xl rounded-lg overflow-hidden",
+              isMobile ? "w-[90vw] max-w-[320px]" : "w-[360px]"
+            )}
+            align="start"
+            sideOffset={4}
+            side="bottom"
+            avoidCollisions={false}
+            sticky="always"
+          >
+            <Command className="bg-transparent">
+              <CommandInput
+                placeholder={`Search ${category.name.toLowerCase()}...`}
+                className="h-10 bg-transparent text-foreground placeholder:text-foreground-subtle border-b border-border/10 rounded-none"
+              />
               <CommandList>
-                <CommandEmpty className="py-4 text-center text-sm text-gray-400">No results found.</CommandEmpty>
-                <div className="flex justify-between items-center px-2 py-2 flex-wrap gap-1 border-b border-[#2a2a3a] mb-1 bg-[#151525]">
+                <CommandEmpty className="py-6 text-center text-sm text-foreground-muted">
+                  No results found.
+                </CommandEmpty>
+
+                {/* Header with description and actions */}
+                <div className="flex justify-between items-center px-3 py-2.5 border-b border-border/10 bg-background-elevated/50">
                   <span className={cn(
-                    "text-xs text-gray-400 font-light",
+                    "text-xs text-foreground-subtle",
                     isMobile ? "truncate max-w-[120px]" : "max-w-[200px] truncate"
                   )}>
                     {category.description}
                   </span>
-                  <div className="flex gap-2">
-                    {getCategorySelectionCount() > 0 && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 text-xs bg-[#252538] hover:bg-[#2a2a42] text-gray-300"
+                  <div className="flex gap-1.5">
+                    {selectionCount > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-foreground-muted hover:text-foreground"
                         onClick={() => handleClearCategory(category.id)}
                       >
                         Clear
@@ -139,7 +158,7 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 text-xs bg-[#252538] hover:bg-[#2a2a42] text-gray-300"
+                      className="h-7 text-xs text-foreground-muted hover:text-foreground"
                       onClick={handleRandomSelect}
                     >
                       <Shuffle className="h-3 w-3 mr-1" />
@@ -147,10 +166,11 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                     </Button>
                   </div>
                 </div>
+
                 <CommandGroup>
                   <ScrollArea className={cn(
-                    "bg-[#121220] px-1",
-                    isMobile ? "h-[40vh] max-h-[300px]" : "h-[300px]"
+                    "px-1",
+                    isMobile ? "h-[40vh] max-h-[280px]" : "h-[280px]"
                   )}>
                     {category.options.map((option) => {
                       const isSelected = Array.isArray(selectedOptions[category.id as keyof PromptConfig])
@@ -162,17 +182,28 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
                           key={option.id}
                           value={option.name}
                           onSelect={() => handleToggleOption(category.id, option.value)}
-                          className="flex items-center gap-2 cursor-pointer hover:bg-[#252538]"
+                          className={cn(
+                            "flex items-center gap-3 cursor-pointer py-2.5 px-2 rounded-md",
+                            "hover:bg-background-elevated",
+                            isSelected && "bg-primary/5"
+                          )}
                         >
                           <div className={cn(
-                            "flex h-4 w-4 items-center justify-center rounded-sm border",
-                            isSelected ? "bg-[#3a3a6a] border-[#5a5a8a] text-white" : "border-[#3a3a4a] opacity-70"
+                            "flex h-4 w-4 items-center justify-center rounded border transition-colors",
+                            isSelected
+                              ? "bg-primary border-primary text-background"
+                              : "border-border/30"
                           )}>
                             {isSelected && <CheckIcon className="h-3 w-3" />}
                           </div>
-                          <span className={cn(isMobile && "text-sm")}>{option.name}</span>
+                          <span className={cn(
+                            "text-foreground",
+                            isMobile && "text-sm"
+                          )}>
+                            {option.name}
+                          </span>
                           {option.description && !isMobile && (
-                            <span className="text-xs text-gray-400 ml-auto max-w-[140px] truncate">
+                            <span className="text-xs text-foreground-subtle ml-auto max-w-[140px] truncate">
                               {option.description}
                             </span>
                           )}
@@ -185,41 +216,53 @@ const CategoryItem: React.FC<CategoryItemProps> = ({
             </Command>
           </PopoverContent>
         </Popover>
+
         <Button
-          variant="outline"
+          variant="ghost"
           size={isMobile ? "sm" : "icon"}
           className={cn(
-            "bg-[#1a1a2e] border-[#2a2a3a] hover:bg-[#252538] text-gray-300",
-            isMobile ? "px-2 min-h-9 h-auto" : "h-auto min-h-9"
+            "bg-background-elevated border border-border/10",
+            "hover:bg-background-surface hover:border-border/20",
+            "text-foreground-muted hover:text-foreground",
+            "transition-all duration-200",
+            isMobile ? "px-2 min-h-10 h-auto" : "h-auto min-h-12 w-12"
           )}
           onClick={handleRandomSelect}
           disabled={isLoading || category.options.length === 0}
-          title="Randomize this category"
+          title="Randomize"
         >
           <Shuffle className="h-4 w-4" />
         </Button>
       </div>
 
-      {getCategorySelectionCount() > 0 && (
-        <div className="flex flex-wrap gap-1 mt-1">
-          {Array.isArray(selectedOptions[category.id as keyof PromptConfig]) ? 
+      {/* Selected badges */}
+      {selectionCount > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {Array.isArray(selectedOptions[category.id as keyof PromptConfig]) ?
             (selectedOptions[category.id as keyof PromptConfig] as string[]).map((selected, index) => {
               const option = category.options.find(o => o.value === selected);
               return option ? (
-                <Badge 
-                  key={index} 
+                <Badge
+                  key={index}
                   variant="secondary"
-                  className={cn("text-xs bg-[#252538] text-gray-300 hover:bg-[#2a2a42] border border-[#2a2a3a]", isMobile && "text-[10px] py-0 h-5")}
+                  className={cn(
+                    "text-xs bg-primary/10 text-primary border border-primary/20",
+                    "hover:bg-primary/15",
+                    isMobile && "text-[10px] py-0 h-5"
+                  )}
                 >
                   {option.name}
                 </Badge>
               ) : null;
             })
-            : 
+            :
             selectedOptions[category.id as keyof PromptConfig] ? (
-              <Badge 
-                variant="secondary" 
-                className={cn("text-xs bg-[#252538] text-gray-300 hover:bg-[#2a2a42] border border-[#2a2a3a]", isMobile && "text-[10px] py-0 h-5")}
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "text-xs bg-primary/10 text-primary border border-primary/20",
+                  isMobile && "text-[10px] py-0 h-5"
+                )}
               >
                 {category.options.find(o => o.value === selectedOptions[category.id as keyof PromptConfig])?.name}
               </Badge>

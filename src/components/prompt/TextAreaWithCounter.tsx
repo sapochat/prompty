@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -21,28 +20,33 @@ const TextAreaWithCounter: React.FC<TextAreaWithCounterProps> = ({
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize function
   const resizeTextarea = () => {
     const textarea = textareaRef.current;
     if (textarea) {
-      // Reset height to auto to get the correct scrollHeight
       textarea.style.height = 'auto';
-      // Set new height based on content (min 80px, max 300px)
-      textarea.style.height = `${Math.max(80, Math.min(textarea.scrollHeight, 300))}px`;
+      textarea.style.height = `${Math.max(100, Math.min(textarea.scrollHeight, 300))}px`;
     }
   };
 
-  // Resize on initial render and when value changes
   useEffect(() => {
     resizeTextarea();
   }, [value]);
 
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <label htmlFor="extra-details-textarea" className="heading-3">{label}</label>
-        <span id="extra-details-counter" className="text-xs text-muted-foreground" aria-live="polite">
-          {value.length}/{maxLength} characters
+    <div className="space-y-3">
+      <div className="flex justify-between items-baseline">
+        <label
+          htmlFor="extra-details-textarea"
+          className="font-display text-base font-medium text-foreground"
+        >
+          {label}
+        </label>
+        <span
+          id="extra-details-counter"
+          className="text-xs text-foreground-subtle tabular-nums"
+          aria-live="polite"
+        >
+          {value.length}/{maxLength}
         </span>
       </div>
       <Textarea
@@ -52,11 +56,10 @@ const TextAreaWithCounter: React.FC<TextAreaWithCounterProps> = ({
         value={value}
         onChange={(e) => {
           onChange(e);
-          // Manual resize on each input
           window.requestAnimationFrame(() => resizeTextarea());
         }}
-        onInput={resizeTextarea} // Additional event handler for immediate feedback
-        className="resize-none min-h-[80px] max-h-[300px] transition-colors focus-visible:ring-1"
+        onInput={resizeTextarea}
+        className="textarea-editorial resize-none min-h-[100px] max-h-[300px]"
         disabled={isDisabled}
         maxLength={maxLength}
         aria-label={label}

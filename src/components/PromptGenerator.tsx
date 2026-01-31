@@ -1,7 +1,5 @@
-
 import React, { useCallback, useEffect } from 'react';
 import { promptCategories } from '@/utils/promptData';
-import { Card } from '@/components/ui/card';
 import CategorySelector from './CategorySelector';
 import { PromptConfig } from '@/types/prompt';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -18,46 +16,38 @@ interface PromptGeneratorProps {
   initialConfig?: PromptConfig;
 }
 
-/**
- * Main component for generating prompts with various parameters
- */
 const PromptGenerator: React.FC<PromptGeneratorProps> = ({ initialConfig }) => {
   const isMobile = useIsMobile();
   const { isLoadingKeys, filteredModels, loadApiKeys } = useModelSelection();
   const { isGenerating, generatePromptHelper } = usePromptGeneration();
-  
-  // Manage prompt configuration with custom hook
-  const { 
-    promptConfig, 
-    setPromptConfig, 
-    extraDetails, 
-    setExtraDetails, 
-    isInitialized 
+
+  const {
+    promptConfig,
+    setPromptConfig,
+    extraDetails,
+    setExtraDetails,
+    isInitialized
   } = usePromptConfig(initialConfig);
 
   const [prefixText, setPrefixText] = React.useState<string>('');
-  
-  // Initialize prefix text from config
+
   useEffect(() => {
     if (isInitialized && promptConfig.prefixText) {
       setPrefixText(promptConfig.prefixText);
     }
   }, [isInitialized, promptConfig.prefixText]);
 
-  // Reload models when API keys are updated
   useEffect(() => {
     const handleApiKeysUpdated = () => {
-      console.log("API keys updated event received, reloading models");
       loadApiKeys();
     };
-    
+
     window.addEventListener('apiKeysUpdated', handleApiKeysUpdated);
     return () => {
       window.removeEventListener('apiKeysUpdated', handleApiKeysUpdated);
     };
   }, [loadApiKeys]);
 
-  // Handler for category option selection
   const handleOptionSelect = useCallback((categoryId: string, value: string | string[]) => {
     setPromptConfig(prev => ({
       ...prev,
@@ -65,23 +55,19 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({ initialConfig }) => {
     }));
   }, [setPromptConfig]);
 
-  // Handler for extra details input
   const handleExtraDetailsChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setExtraDetails(e.target.value);
   }, [setExtraDetails]);
-  
-  // Handler for prefix text input
+
   const handlePrefixTextChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setPrefixText(newValue);
-    
     setPromptConfig(prev => ({
       ...prev,
       prefixText: newValue,
     }));
   }, [setPromptConfig]);
 
-  // Handler for model selection
   const handleModelChange = useCallback((value: string) => {
     setPromptConfig(prev => ({
       ...prev,
@@ -89,49 +75,38 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({ initialConfig }) => {
     }));
   }, [setPromptConfig]);
 
-  // Helper to get a random option from a category
   const getRandomOptionFromCategory = useCallback((categoryId: string) => {
     const category = promptCategories.find(c => c.id === categoryId);
     if (!category || category.options.length === 0) return [];
-    
     const randomIndex = Math.floor(Math.random() * category.options.length);
     return [category.options[randomIndex].value];
   }, []);
 
-  // Handler to randomize all categories
   const handleRandomizeAll = useCallback(() => {
     const newConfig = { ...promptConfig };
-    
     promptCategories.forEach(category => {
       newConfig[category.id as keyof PromptConfig] = getRandomOptionFromCategory(category.id);
     });
-    
     setPromptConfig(newConfig);
     toast.success("All categories randomized");
   }, [promptConfig, getRandomOptionFromCategory, setPromptConfig]);
 
-  // Handlers for prompt generation
   const handleGeneratePrompt = () => generatePromptHelper(promptConfig, extraDetails, prefixText, promptCategories, 1);
   const handleGenerateMultiple = () => generatePromptHelper(promptConfig, extraDetails, prefixText, promptCategories, 3);
 
-  // Handler to reset all selections
   const handleReset = useCallback(() => {
     const defaultConfig = { ...promptConfig };
     const model = defaultConfig.model;
-    
     promptCategories.forEach(category => {
       defaultConfig[category.id as keyof PromptConfig] = [];
     });
-    
     defaultConfig.model = model;
-    
     setPromptConfig(defaultConfig);
     setExtraDetails('');
     setPrefixText('');
     toast.success("All selections cleared");
   }, [promptConfig, setPromptConfig, setExtraDetails]);
 
-  // Count selected categories to determine if prompt can be generated
   const countSelectedCategories = useCallback(() => {
     return Object.entries(promptConfig).filter(([key, value]) => {
       if (key === 'model' || key === 'prefixText') return false;
@@ -145,21 +120,31 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({ initialConfig }) => {
   const selectedCategoriesCount = countSelectedCategories();
   const requiredCategoriesCount = 2;
   const canGeneratePrompt = selectedCategoriesCount >= requiredCategoriesCount;
-  
+
   return (
-    <Card className="bg-[#121220] border border-[#2a2a3a] rounded-lg shadow-md text-white overflow-hidden" role="region" aria-label="Prompt Generator">
-      <form className="p-5 space-y-6" onSubmit={(e) => e.preventDefault()}>
-        <fieldset className="space-y-6">
+    <div
+      className="editorial-card-elevated overflow-hidden"
+      role="region"
+      aria-label="Prompt Generator"
+    >
+      <form className="p-6 md:p-8 space-y-8" onSubmit={(e) => e.preventDefault()}>
+        <fieldset className="space-y-8">
           <legend className="sr-only">Prompt Configuration</legend>
-          
-          <section className="model-selection-section" aria-labelledby="model-selection-heading">
-            <header className="flex justify-between items-start">
-              <div className="space-y-1">
-                <h3 id="model-selection-heading" className="text-lg font-semibold text-white">AI Model</h3>
-                <p className="text-sm text-gray-400">Select which AI model to use</p>
-              </div>
+
+          {/* Model Selection */}
+          <section aria-labelledby="model-selection-heading">
+            <header className="mb-4">
+              <h3
+                id="model-selection-heading"
+                className="font-display text-lg font-medium text-foreground"
+              >
+                AI Model
+              </h3>
+              <p className="text-sm text-foreground-muted mt-1">
+                Choose the model that will generate your prompt
+              </p>
             </header>
-            
+
             <ModelSelector
               isLoading={isLoadingKeys}
               filteredModels={filteredModels}
@@ -167,8 +152,20 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({ initialConfig }) => {
               onModelChange={handleModelChange}
             />
           </section>
-          
-          <section className="category-selection-section" aria-label="Category Selection">
+
+          <div className="divider" aria-hidden="true" />
+
+          {/* Category Selection */}
+          <section aria-label="Category Selection">
+            <header className="mb-4">
+              <h3 className="font-display text-lg font-medium text-foreground">
+                Prompt Parameters
+              </h3>
+              <p className="text-sm text-foreground-muted mt-1">
+                Select at least {requiredCategoriesCount} categories to enable generation
+              </p>
+            </header>
+
             <CategorySelector
               categories={promptCategories}
               selectedOptions={promptConfig}
@@ -176,8 +173,11 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({ initialConfig }) => {
               isLoading={isGenerating || isLoadingKeys}
             />
           </section>
-          
-          <section className="extra-details-section" aria-label="Additional Details">
+
+          <div className="divider" aria-hidden="true" />
+
+          {/* Extra Details */}
+          <section aria-label="Additional Details">
             <ExtraDetailsInput
               value={extraDetails}
               onChange={handleExtraDetailsChange}
@@ -186,8 +186,9 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({ initialConfig }) => {
               onPrefixChange={handlePrefixTextChange}
             />
           </section>
-          
-          <section className="action-buttons-section" aria-label="Generator Controls">
+
+          {/* Action Buttons */}
+          <section aria-label="Generator Controls" className="pt-2">
             <ActionButtons
               onReset={handleReset}
               onRandomizeAll={handleRandomizeAll}
@@ -200,8 +201,9 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({ initialConfig }) => {
               isMobile={isMobile}
             />
           </section>
-          
-          <footer className="status-message-section" aria-live="polite">
+
+          {/* Status Message */}
+          <footer aria-live="polite">
             <StatusMessage
               isLoadingKeys={isLoadingKeys}
               hasModels={filteredModels.length > 0}
@@ -211,7 +213,7 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({ initialConfig }) => {
           </footer>
         </fieldset>
       </form>
-    </Card>
+    </div>
   );
 };
 

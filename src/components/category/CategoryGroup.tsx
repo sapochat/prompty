@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Category, PromptConfig } from '@/types/prompt';
 import CategoryItem from './CategoryItem';
@@ -21,18 +20,21 @@ const CategoryGroup: React.FC<CategoryGroupProps> = ({
   isLoading = false,
 }) => {
   const isMobile = useIsMobile();
-  
+
   return (
-    <div className="space-y-3">
-      <h3 className={cn("heading-3", isMobile && "text-base mb-1")}>
+    <div className="space-y-4">
+      <h4 className={cn(
+        "font-display text-sm font-medium text-foreground-muted uppercase tracking-wider",
+        isMobile && "text-xs"
+      )}>
         {title}
-      </h3>
+      </h4>
       <div className={cn(
-        "grid grid-cols-1 gap-2",
-        !isMobile && "md:grid-cols-2 lg:grid-cols-3 gap-4"
+        "grid grid-cols-1 gap-3",
+        !isMobile && "md:grid-cols-2 lg:grid-cols-3"
       )}>
         {categories.map((category) => (
-          <CategoryItem 
+          <CategoryItem
             key={category.id}
             category={category}
             selectedOptions={selectedOptions}

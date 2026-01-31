@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ExternalLink } from 'lucide-react';
 
 interface ApiKeyInputProps {
   id: string;
@@ -13,9 +13,6 @@ interface ApiKeyInputProps {
   linkUrl: string;
 }
 
-/**
- * Component for handling API key input with proper masking and external link
- */
 const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
   id,
   provider,
@@ -26,8 +23,13 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
   linkUrl,
 }) => {
   return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{provider} API Key</Label>
+    <div className="space-y-3">
+      <Label
+        htmlFor={id}
+        className="font-display text-sm font-medium text-foreground"
+      >
+        {provider} API Key
+      </Label>
       <Input
         id={id}
         type="password"
@@ -35,9 +37,19 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({
         value={value}
         onChange={onChange}
         disabled={disabled}
+        className="input-editorial"
       />
-      <p className="text-xs text-muted-foreground">
-        Get your API key from <a href={linkUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80 transition-colors">{provider} Dashboard</a>
+      <p className="text-xs text-foreground-muted flex items-center gap-1">
+        Get your key from{' '}
+        <a
+          href={linkUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:text-primary-light transition-colors inline-flex items-center gap-1"
+        >
+          {provider}
+          <ExternalLink className="h-3 w-3" />
+        </a>
       </p>
     </div>
   );

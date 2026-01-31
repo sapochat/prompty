@@ -1,13 +1,12 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Tooltip, 
-  TooltipContent, 
-  TooltipProvider, 
-  TooltipTrigger 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
 } from '@/components/ui/tooltip';
-import { Clock, Copy, Trash, ChevronDown, ChevronUp, RefreshCw, Rewind, Layers, BookOpen } from 'lucide-react';
+import { Clock, Copy, Trash2, ChevronDown, ChevronUp, RefreshCw, Rewind, BookOpen } from 'lucide-react';
 import { usePromptHistory } from '@/hooks/usePromptHistory';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,22 +14,20 @@ import { Spinner } from '@/components/ui/spinner';
 import { GeneratedPrompt } from '@/types/prompt';
 import { useNavigate } from 'react-router-dom';
 import { dispatchPromptConfigLoadedEvent } from '@/hooks/usePromptConfig';
-import { Badge } from "@/components/ui/badge";
 import { Link } from 'react-router-dom';
 
-const PAGE_SIZE = 20; // Number of prompt entries to load per chunk
+const PAGE_SIZE = 20;
 
 const PromptHistory: React.FC = () => {
-  const { history, isLoading, isInitialized, loadHistory, handleDeletePrompt, handleClearAll } = usePromptHistory();
+  const { history, isLoading, isInitialized, loadHistory, handleDeletePrompt } = usePromptHistory();
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const [expandedBatches, setExpandedBatches] = useState<Record<string, boolean>>({});
   const [refreshing, setRefreshing] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE); // Track how many items are visible
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastScrollTimeRef = useRef<number>(0);
   const navigate = useNavigate();
 
-  // Memoize batch grouping - only recalculate when history changes
   const { batchGroups, standalonePrompts } = useMemo(() => {
     const batchGroups: Record<string, GeneratedPrompt[]> = {};
     const standalonePrompts: GeneratedPrompt[] = [];
@@ -46,7 +43,6 @@ const PromptHistory: React.FC = () => {
       }
     });
 
-    // Sort each batch group by timestamp
     Object.values(batchGroups).forEach(group => {
       group.sort((a, b) => b.timestamp - a.timestamp);
     });
@@ -54,7 +50,6 @@ const PromptHistory: React.FC = () => {
     return { batchGroups, standalonePrompts };
   }, [history]);
 
-  // Memoize organized prompts for display - only recalculate when grouping changes
   const allOrganizedPrompts = useMemo(() => {
     const batchKeys = Object.keys(batchGroups);
     const organizedPrompts: Array<{
@@ -78,7 +73,6 @@ const PromptHistory: React.FC = () => {
       });
     });
 
-    // Sort by most recent timestamp in each group
     return organizedPrompts.sort((a, b) => {
       const aTime = Math.max(...a.prompts.map(p => p.timestamp));
       const bTime = Math.max(...b.prompts.map(p => p.timestamp));
@@ -86,23 +80,19 @@ const PromptHistory: React.FC = () => {
     });
   }, [batchGroups, standalonePrompts]);
 
-  // Memoize the visible slice of organized prompts
   const organizedPrompts = useMemo(() => {
     return allOrganizedPrompts.slice(0, visibleCount);
   }, [allOrganizedPrompts, visibleCount]);
 
-  // Memoize whether there are more items to load
   const loadingMore = useMemo(() => {
     return visibleCount < allOrganizedPrompts.length;
   }, [visibleCount, allOrganizedPrompts.length]);
 
-  // Infinite scroll with throttled scroll handler
   React.useEffect(() => {
     const THROTTLE_MS = 100;
 
     const handleScroll = () => {
       const now = Date.now();
-      // Throttle scroll events
       if (now - lastScrollTimeRef.current < THROTTLE_MS) {
         return;
       }
@@ -111,7 +101,6 @@ const PromptHistory: React.FC = () => {
       const scrollArea = scrollAreaRef.current;
       if (!scrollArea) return;
       if (scrollArea.scrollTop + scrollArea.clientHeight >= scrollArea.scrollHeight - 10) {
-        // Near the bottom, load more
         setVisibleCount((prev) => Math.min(prev + PAGE_SIZE, allOrganizedPrompts.length));
       }
     };
@@ -128,11 +117,26 @@ const PromptHistory: React.FC = () => {
 
   const handleCopyPrompt = useCallback((prompt: string) => {
     navigator.clipboard.writeText(prompt);
-    toast.success('Prompt copied to clipboard');
+    toast.success('Copied to clipboard');
   }, []);
 
   const formatDate = useCallback((timestamp: number) => {
-    return new Date(timestamp).toLocaleString();
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
   }, []);
 
   const toggleExpand = useCallback((id: string) => {
@@ -151,11 +155,10 @@ const PromptHistory: React.FC = () => {
 
   const handleRefresh = useCallback(async () => {
     if (refreshing) return;
-
     setRefreshing(true);
     try {
       await loadHistory();
-      toast.success('Prompt history refreshed');
+      toast.success('History refreshed');
     } catch (error) {
       console.error("Error refreshing history:", error);
     } finally {
@@ -165,41 +168,58 @@ const PromptHistory: React.FC = () => {
 
   const handleLoadPromptConfig = useCallback((prompt: GeneratedPrompt) => {
     dispatchPromptConfigLoadedEvent(prompt.config);
-
     if (window.location.pathname !== '/') {
       navigate('/');
     }
-
-    toast.success('Prompt configuration loaded');
+    toast.success('Configuration loaded');
   }, [navigate]);
 
   if (!isInitialized && isLoading) {
     return (
-      <Card className="flux-card section-container flex-center flex-col space-y-4 py-12 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[var(--card-radius)] shadow-[var(--card-shadow)] text-white" role="status" aria-label="Loading prompt history">
-        <Spinner size="lg" aria-hidden="true" />
-        <p className="text-muted-foreground">Loading prompt history...</p>
-      </Card>
+      <div
+        className="editorial-card flex-center flex-col py-16"
+        role="status"
+        aria-label="Loading prompt history"
+      >
+        <div className="spinner h-8 w-8 mb-4" aria-hidden="true" />
+        <p className="text-foreground-muted text-sm">Loading history...</p>
+      </div>
     );
   }
 
   if (isInitialized && history.length === 0) {
     return (
-      <Card className="flux-card section-container flex-center flex-col space-y-4 py-12 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-[var(--card-radius)] shadow-[var(--card-shadow)] text-white" role="status" aria-label="Empty prompt history">
-        <Clock className="h-12 w-12 text-muted-foreground opacity-50" aria-hidden="true" />
-        <p className="text-muted-foreground">No prompt history yet. Generated prompts will appear here.</p>
-      </Card>
+      <div
+        className="editorial-card flex-center flex-col py-16"
+        role="status"
+        aria-label="Empty prompt history"
+      >
+        <Clock className="h-10 w-10 text-foreground-subtle mb-4" aria-hidden="true" />
+        <p className="text-foreground-muted text-sm text-center max-w-xs">
+          No prompts yet. Generated prompts will appear here.
+        </p>
+      </div>
     );
   }
 
   const renderPromptItem = (item: GeneratedPrompt, index?: number, isInBatch?: boolean) => (
-    <article key={item.id} className={`content-item relative ${isInBatch ? 'border-l-0 pl-0' : ''}`} aria-label={`Prompt from ${formatDate(item.timestamp)}`}>
+    <article
+      key={item.id}
+      className={`content-item ${isInBatch ? 'ml-4 border-l-2 border-primary/20 pl-4' : ''}`}
+      aria-label={`Prompt from ${formatDate(item.timestamp)}`}
+    >
       <header className="item-header">
-        <div className="flex items-center gap-2">
-          <time className="item-timestamp" dateTime={new Date(item.timestamp).toISOString()}>{formatDate(item.timestamp)}</time>
-          {isInBatch && (
-            <Badge variant="outline" className="text-xs bg-primary/5 text-primary">
-              Variation {index !== undefined ? index + 1 : ''}
-            </Badge>
+        <div className="flex items-center gap-3">
+          <time
+            className="item-timestamp"
+            dateTime={new Date(item.timestamp).toISOString()}
+          >
+            {formatDate(item.timestamp)}
+          </time>
+          {isInBatch && index !== undefined && (
+            <span className="badge-muted">
+              #{index + 1}
+            </span>
           )}
         </div>
         <div className="item-actions" role="toolbar" aria-label="Prompt actions">
@@ -209,149 +229,172 @@ const PromptHistory: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-primary hover:text-primary/80"
+                  className="h-7 w-7 text-primary hover:text-primary-light hover:bg-primary/10"
                   onClick={() => handleLoadPromptConfig(item)}
                 >
                   <Rewind className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>Load this prompt's settings</p>
+              <TooltipContent className="bg-popover border-border/10 text-xs">
+                Load settings
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
+
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  className="h-7 w-7 text-foreground-muted hover:text-foreground hover:bg-background-elevated"
                   onClick={() => handleCopyPrompt(item.prompt)}
                 >
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>Copy prompt</p>
+              <TooltipContent className="bg-popover border-border/10 text-xs">
+                Copy prompt
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
+
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-destructive hover:text-destructive/90"
+                  className="h-7 w-7 text-foreground-subtle hover:text-destructive hover:bg-destructive/10"
                   onClick={() => handleDeletePrompt(item.id)}
                 >
-                  <Trash className="h-3.5 w-3.5" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>Delete from history</p>
+              <TooltipContent className="bg-popover border-border/10 text-xs">
+                Delete
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
       </header>
-      
-      <section className="prompt-content">
-        {!expandedItems[item.id] && (
-          <div className="item-content item-preview" id={`prompt-content-${item.id}`}>
-            {item.prompt}
-          </div>
-        )}
-        
-        {expandedItems[item.id] && (
-          <div className="item-content item-expanded" id={`prompt-content-${item.id}`}>
-            {item.prompt}
-          </div>
-        )}
+
+      <section className="mt-2">
+        <div
+          className={expandedItems[item.id] ? 'item-expanded' : 'item-content item-preview'}
+          id={`prompt-content-${item.id}`}
+        >
+          {item.prompt}
+        </div>
 
         <Button
           variant="ghost"
           size="sm"
-          className="p-0 h-auto flex items-center text-left hover:bg-transparent text-primary hover:text-primary/80"
+          className="mt-2 h-auto p-0 text-primary hover:text-primary-light hover:bg-transparent"
           onClick={() => toggleExpand(item.id)}
           aria-expanded={expandedItems[item.id]}
           aria-controls={`prompt-content-${item.id}`}
         >
-          <span className="mr-1">
+          <span className="flex items-center gap-1 text-xs font-medium">
             {expandedItems[item.id] ? (
-              <ChevronUp className="h-3.5 w-3.5" />
+              <>
+                <ChevronUp className="h-3 w-3" />
+                Show less
+              </>
             ) : (
-              <ChevronDown className="h-3.5 w-3.5" />
+              <>
+                <ChevronDown className="h-3 w-3" />
+                Show more
+              </>
             )}
-          </span>
-          <span className="text-xs font-medium">
-            {expandedItems[item.id] ? 'Show less' : 'Show more'}
           </span>
         </Button>
       </section>
 
       <footer className="item-footer">
-        Generated with: <span className="text-primary/80">{item.modelUsed || "AI Model"}</span>
+        Model: <span className="text-primary">{item.modelUsed || "Unknown"}</span>
       </footer>
     </article>
   );
 
   return (
-    <Card className="flux-card section-container" role="region" aria-label="Prompt History">
-      <header className="flex-between mb-6">
-        <h2 className="heading-2 gradient-text">Recent Prompts</h2>
-        <nav className="flex gap-2" aria-label="Prompt history navigation">
+    <div className="editorial-card" role="region" aria-label="Prompt History">
+      <header className="flex-between p-6 pb-0">
+        <div>
+          <h2 className="heading-2">Recent Prompts</h2>
+          <p className="text-sm text-foreground-muted mt-1">
+            {history.length} prompt{history.length !== 1 ? 's' : ''} generated
+          </p>
+        </div>
+        <nav className="flex gap-2" aria-label="History actions">
           <Link to="/explorer">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="gap-2"
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 text-foreground-muted hover:text-foreground"
             >
               <BookOpen className="h-4 w-4" />
-              View All
+              <span className="hidden sm:inline">View All</span>
             </Button>
           </Link>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-2"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-2 text-foreground-muted hover:text-foreground"
             onClick={handleRefresh}
             disabled={refreshing || isLoading}
           >
-            {refreshing || isLoading ? <Spinner size="sm" /> : <RefreshCw className="h-4 w-4" />}
-            Refresh
+            {refreshing || isLoading ? (
+              <div className="spinner h-4 w-4" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
         </nav>
       </header>
-      <ScrollArea className="flex-1" ref={scrollAreaRef}>
-        {organizedPrompts.map((group, idx) => (
-          <section key={group.type === 'batch' ? group.batchId : idx}
-            aria-label={group.type === 'batch' ? 'Prompt batch' : 'Individual prompt'}>
-            <div className={group.type === 'batch' ?
-              "pl-3 border-l-2 border-primary/30 space-y-4 rounded-sm bg-primary/5 p-2" :
-              ""}>
+
+      <ScrollArea className="p-6 max-h-[500px]" ref={scrollAreaRef}>
+        <div className="space-y-4">
+          {organizedPrompts.map((group, idx) => (
+            <section
+              key={group.type === 'batch' ? group.batchId : idx}
+              aria-label={group.type === 'batch' ? 'Prompt batch' : 'Individual prompt'}
+            >
               {group.type === 'batch' && group.batchId ? (
-                !expandedBatches[group.batchId] ? 
-                  renderPromptItem(group.prompts[0], 0, true) :
-                  group.prompts.map((item, idx) => renderPromptItem(item, idx, true))
+                <div className="space-y-3">
+                  {!expandedBatches[group.batchId]
+                    ? renderPromptItem(group.prompts[0], 0, true)
+                    : group.prompts.map((item, idx) => renderPromptItem(item, idx, true))}
+                  {group.prompts.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-4 text-xs text-foreground-subtle hover:text-foreground"
+                      onClick={() => toggleExpandBatch(group.batchId!)}
+                    >
+                      {expandedBatches[group.batchId]
+                        ? `Hide ${group.prompts.length - 1} variations`
+                        : `Show ${group.prompts.length - 1} more variations`}
+                    </Button>
+                  )}
+                </div>
               ) : (
                 group.prompts.map(item => renderPromptItem(item))
               )}
-            </div>
-          </section>
-        ))}
+            </section>
+          ))}
+        </div>
+
         {loadingMore && (
-          <footer className="flex justify-center items-center py-4" aria-live="polite">
-            <Spinner size="sm" className="mr-2" />
-            <span>Loading more prompts...</span>
-          </footer>
+          <div className="flex-center py-6" aria-live="polite">
+            <div className="spinner h-5 w-5 mr-2" />
+            <span className="text-sm text-foreground-muted">Loading more...</span>
+          </div>
         )}
       </ScrollArea>
-    </Card>
+    </div>
   );
-}
+};
 
 export default PromptHistory;
