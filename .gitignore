@@ -39,3 +39,7 @@ Thumbs.db
 
 # Git backup directory
 .git.backup/
+
+# AI context and planning documents
+CLAUDE.md
+docs/plans/
