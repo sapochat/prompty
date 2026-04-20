@@ -37,7 +37,7 @@ export const generateHuggingfacePrompt = async (config: PromptConfig): Promise<A
 
   const loadingToast = toast.loading('Generating prompt with Huggingface...');
   try {
-    const baseModel = config.model || 'mistralai/Mistral-7B-Instruct-v0.3';
+    const baseModel = config.model || 'meta-llama/Llama-3.1-8B-Instruct';
     // `:auto` lets HF pick any supported Inference Provider for the model.
     const routedModel = baseModel.includes(':') ? baseModel : `${baseModel}:auto`;
 

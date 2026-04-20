@@ -38,10 +38,10 @@ Each provider offers a tiered selection of models (fast, balanced, powerful).
 - **Best for**: Detailed, nuanced prompts with creative elements
 
 ### HuggingFace
-- **Models**: Mistral 7B v0.3 (fast), Llama 3 8B (balanced), Qwen 2.5 72B (powerful)
+- **Models**: Llama 3.1 8B (fast), Llama 3.3 70B (balanced), Qwen 2.5 72B (powerful)
 - **API Key**: [Get your HuggingFace API key](https://huggingface.co/settings/tokens)
-- **Pricing**: [HuggingFace Inference API pricing](https://huggingface.co/pricing)
-- **Best for**: Access to a variety of open-source models
+- **Pricing**: [HuggingFace Inference Providers pricing](https://huggingface.co/docs/inference-providers/pricing)
+- **Best for**: Access to a variety of open-source models, routed via any available Inference Provider
 
 ### Novita AI
 - **Models**: Llama 3.2 3B (fast), Llama 3.3 70B (balanced), Llama 4 Scout 17B (powerful)

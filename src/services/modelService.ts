@@ -54,17 +54,17 @@ export const availableModels: AIModel[] = [
     description: 'Most intelligent Claude model.',
     requiresApiKey: true,
   },
-  // HuggingFace models
+  // HuggingFace models (verified available on router.huggingface.co as of April 2026)
   {
-    id: 'mistralai/Mistral-7B-Instruct-v0.3',
-    name: 'Mistral 7B v0.3',
+    id: 'meta-llama/Llama-3.1-8B-Instruct',
+    name: 'Llama 3.1 8B',
     provider: 'huggingface',
-    description: 'Fast open-source model.',
+    description: 'Fast open-source Meta model.',
     requiresApiKey: true,
   },
   {
-    id: 'meta-llama/Meta-Llama-3-8B-Instruct',
-    name: 'Llama 3 8B',
+    id: 'meta-llama/Llama-3.3-70B-Instruct',
+    name: 'Llama 3.3 70B',
     provider: 'huggingface',
     description: 'Balanced Meta model.',
     requiresApiKey: true,
