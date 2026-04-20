@@ -19,7 +19,7 @@ A locally-runnable AI prompt generator with secure API key management.
 4. **Generate** - Create prompts with a single click
 5. **View history** - Access all your previously generated prompts
 
-All data is stored locally in your browser - your API are only used to authenticate the requests for inference.
+All data is stored locally in your browser — API keys are only used to authenticate requests to the provider you selected, never to any other server.
 
 ## Supported AI Providers and Models
 
@@ -55,11 +55,15 @@ Each provider offers a tiered selection of models (fast, balanced, powerful).
 - **Pricing**: [OpenRouter pricing information](https://openrouter.ai/pricing)
 - **Best for**: Flexibility to access multiple models through a single API
 
+## Tech Stack
+
+React 19, TypeScript, Vite 6, Tailwind CSS 3, Radix UI, TanStack Query, Zustand, Vitest.
+
 ## Setup and Installation
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 20+ and npm
 
 ### Installation
 
@@ -74,10 +78,12 @@ cd prompty
 npm install
 ```
 
-3. Create a `.env` file (optional - you can add API keys through the UI later):
+3. (Optional, dev-only) Create a `.env` for pre-populating keys during local development:
 ```bash
 cp .env.example .env
 ```
+
+> **Warning:** Vite inlines `VITE_*` environment variables into the built JavaScript bundle. Do **not** put production API keys in `.env` for a deployed build — anyone who downloads the JS will see them. For everyday use, add keys through the in-app settings UI; those keys live in `localStorage` on your own machine.
 
 ### Running the App
 
@@ -87,37 +93,43 @@ Start the development server:
 npm run dev
 ```
 
-The application will be available at http://localhost:8080
+The application will be available at http://localhost:8080.
 
 ## Configuration
 
 ### Using API Keys
 
 You can:
-1. Add API keys directly in the `.env` file before starting the app
-2. Add API keys through the application's settings menu (gear icon in the header)
+1. Add API keys through the application's settings menu (gear icon in the header) — recommended.
+2. Or, for local development only, pre-populate keys in a `.env` file (see warning above).
 
-All keys are stored securely in your browser's localStorage and are never sent to any external server.
+Keys added via the UI are stored in your browser's `localStorage` and are only ever sent to the provider you selected.
 
 ## Development
 
 ### Project Structure
 
 - `/src` - Application source code
-  - `/components` - React components
+  - `/components` - React components (including shadcn-style `/ui` primitives)
   - `/hooks` - Custom React hooks
-  - `/pages` - Page components
-  - `/services` - API services and data handling
-  - `/utils` - Utility functions
+  - `/lib` - Shared library code (e.g. the TanStack `QueryClient` singleton)
+  - `/pages` - Route-level page components
+  - `/services` - API services and data handling, incl. `/api` per-provider adapters
+  - `/stores` - Zustand stores for client state (prompt config, history, generation)
   - `/types` - TypeScript type definitions
+  - `/utils` - Utility functions (crypto, logger, string helpers, prompt data)
 
-### Building for Production
+### Scripts
 
 ```bash
-npm run build
+npm run dev            # Dev server on :8080
+npm run build          # Production build to ./dist
+npm run preview        # Serve the built ./dist locally
+npm run lint           # ESLint
+npm run test           # Vitest in watch mode
+npm run test:run       # Vitest single run
+npm run test:coverage  # Vitest with v8 coverage report
 ```
-
-This will create a `dist` directory with the compiled application.
 
 ## Deployment
 
