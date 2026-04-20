@@ -9,15 +9,12 @@ createRoot(document.getElementById("root")!).render(
   </React.StrictMode>
 );
 
-// Register service worker for offline/PWA support
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(registration => {
-        console.log('Service Worker registered with scope:', registration.scope);
-      })
-      .catch(error => {
-        console.error('Service Worker registration failed:', error);
-      });
+// Unregister any stale service worker from a previous build. The old SW only
+// precached `/`, `/index.html`, and `/manifest.json` — none of the hashed JS/CSS
+// bundles — so returning users could hit a cached index.html pointing at assets
+// that no longer exist.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    regs.forEach((reg) => reg.unregister());
   });
 }

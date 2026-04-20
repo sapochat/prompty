@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { AIModel } from '@/types/prompt';
 import { getAvailableModels, availableModels } from '@/services/modelService';
 import { logger } from '@/utils/logger';
 
 /**
  * Hook for handling model selection and filtering
  */
-export const useModelSelection = (initialModelId?: string) => {
+export const useModelSelection = () => {
   const [isLoadingKeys, setIsLoadingKeys] = useState<boolean>(true);
   const [filteredModels, setFilteredModels] = useState<typeof availableModels>([]);
   

@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { saveApiKey } from '@/services/promptService';
 import { availableModels, saveEnabledModels } from '@/services/modelService';
 import ApiProviderTab from './ApiProviderTab';
+import { logger } from '@/utils/logger';
 
 interface ApiSettingsDialogProps {
   apiKeys: {
@@ -77,7 +78,7 @@ const ApiSettingsDialog: React.FC<ApiSettingsDialogProps> = ({
         setEnabledModels(availableModels.map(model => model.id));
       }
     } catch (error) {
-      console.error("Error loading enabled models:", error);
+      logger.error("Error loading enabled models:", error);
       setEnabledModels(availableModels.map(model => model.id));
     }
   };
@@ -86,7 +87,7 @@ const ApiSettingsDialog: React.FC<ApiSettingsDialogProps> = ({
     try {
       localStorage.setItem('enabledProviders', JSON.stringify(providers));
     } catch (error) {
-      console.error("Error saving enabled providers:", error);
+      logger.error("Error saving enabled providers:", error);
     }
   };
 
@@ -156,7 +157,7 @@ const ApiSettingsDialog: React.FC<ApiSettingsDialogProps> = ({
         onKeysUpdated();
       }
     } catch (error) {
-      console.error("Error saving API settings:", error);
+      logger.error("Error saving API settings:", error);
       toast.error("Failed to save settings");
     } finally {
       setIsLoading(false);

@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Github } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { logger } from '@/utils/logger';
 
 interface GithubSignInButtonProps {
   onClick: () => Promise<void>;
@@ -14,22 +14,15 @@ export const GithubSignInButton: React.FC<GithubSignInButtonProps> = ({ onClick,
   const [localLoading, setLocalLoading] = useState(false);
   const effectiveLoading = isLoading || localLoading;
   const isMobile = useIsMobile();
-  
-  console.log('GithubSignInButton: Rendering with isLoading =', isLoading, 'localLoading =', localLoading);
-  
+
   const handleClick = async () => {
     try {
-      console.log('GithubSignInButton: Button clicked, setting localLoading to true');
       setLocalLoading(true);
       await onClick();
     } catch (error) {
-      console.error('GithubSignInButton: Error during sign in:', error);
+      logger.error('GithubSignInButton: Error during sign in:', error);
     } finally {
-      // Keep loading state for a short time to prevent flashing
-      setTimeout(() => {
-        console.log('GithubSignInButton: Resetting localLoading to false');
-        setLocalLoading(false);
-      }, 500);
+      setTimeout(() => setLocalLoading(false), 500);
     }
   };
   

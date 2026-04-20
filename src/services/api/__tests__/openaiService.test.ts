@@ -11,10 +11,6 @@ vi.mock('sonner', () => ({
   },
 }));
 
-vi.mock('uuid', () => ({
-  v4: () => 'test-uuid-1234',
-}));
-
 vi.mock('@/utils/logger', () => ({
   logger: {
     log: vi.fn(),

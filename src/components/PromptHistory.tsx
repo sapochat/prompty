@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Clock, Copy, Trash2, ChevronDown, ChevronUp, RefreshCw, Rewind, BookOpen } from 'lucide-react';
 import { usePromptHistory } from '@/hooks/usePromptHistory';
+import { logger } from '@/utils/logger';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/ui/spinner';
@@ -160,7 +161,7 @@ const PromptHistory: React.FC = () => {
       await loadHistory();
       toast.success('History refreshed');
     } catch (error) {
-      console.error("Error refreshing history:", error);
+      logger.error("Error refreshing history:", error);
     } finally {
       setRefreshing(false);
     }

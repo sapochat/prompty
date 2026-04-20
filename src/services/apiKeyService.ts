@@ -62,7 +62,7 @@ export const getApiKey = async (provider: string): Promise<string> => {
     }
     return decryptedKey || '';
   } catch (error) {
-    console.error(`Error retrieving ${provider} API key:`, error);
+    logger.error(`Error retrieving ${provider} API key:`, error);
     return '';
   }
 };
@@ -80,7 +80,7 @@ export const saveApiKey = async (provider: string, apiKey: string): Promise<void
     // Dispatch an event to notify components that API keys have changed
     window.dispatchEvent(new CustomEvent('apiKeysUpdated'));
   } catch (error) {
-    console.error(`Error saving ${provider} API key:`, error);
+    logger.error(`Error saving ${provider} API key:`, error);
     throw error;
   }
 };
@@ -96,7 +96,7 @@ export const deleteApiKey = async (provider: string): Promise<void> => {
     // Dispatch an event to notify components that API keys have changed
     window.dispatchEvent(new CustomEvent('apiKeysUpdated'));
   } catch (error) {
-    console.error(`Error deleting ${provider} API key:`, error);
+    logger.error(`Error deleting ${provider} API key:`, error);
     throw error;
   }
 }; 

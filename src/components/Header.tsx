@@ -12,6 +12,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { logger } from '@/utils/logger';
 
 const Header: React.FC = () => {
   const [apiKeys, setApiKeys] = useState({
@@ -48,7 +49,7 @@ const Header: React.FC = () => {
         setEnabledProviders(allProviders);
       }
     } catch (error) {
-      console.error("Error loading enabled providers:", error);
+      logger.error("Error loading enabled providers:", error);
       setEnabledProviders(getAllProviders());
     }
   };
@@ -82,7 +83,7 @@ const Header: React.FC = () => {
         openrouter: openrouterKey ? maskApiKey(openrouterKey) : ''
       });
     } catch (error) {
-      console.error("Error loading API keys:", error);
+      logger.error("Error loading API keys:", error);
     } finally {
       setIsLoading(false);
     }

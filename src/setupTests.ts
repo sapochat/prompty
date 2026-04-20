@@ -17,7 +17,10 @@ const localStorageMock = (() => {
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 Object.defineProperty(window, 'sessionStorage', { value: localStorageMock });
 
-// Mock crypto.subtle for API key encryption
+// Mock crypto.subtle for API key encryption. randomUUID is a plain counter-
+// based fn (not vi.fn) so `mockReset: true` in vitest config doesn't wipe its
+// implementation and every call still returns a unique id.
+let uuidCounter = 0;
 const mockCrypto = {
   subtle: {
     generateKey: vi.fn(),
@@ -32,6 +35,7 @@ const mockCrypto = {
     }
     return arr;
   }),
+  randomUUID: () => `test-uuid-${++uuidCounter}` as `${string}-${string}-${string}-${string}-${string}`,
 };
 
 Object.defineProperty(globalThis, 'crypto', { value: mockCrypto });

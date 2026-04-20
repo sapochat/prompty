@@ -1,5 +1,4 @@
 import { GeneratedPrompt, PromptConfig } from '@/types/prompt';
-import { v4 as uuidv4 } from 'uuid';
 import { dispatchPromptGeneratedEvent } from "@/hooks/usePromptHistory";
 import { logger } from '@/utils/logger';
 
@@ -18,7 +17,7 @@ export const savePromptToHistory = async (
     // Using localStorage for prompt history
     const history = JSON.parse(localStorage.getItem('promptHistory') || '[]') as GeneratedPrompt[];
     const newPrompt = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       prompt: prompt,
       config: config,
       timestamp: Date.now(),
@@ -30,7 +29,7 @@ export const savePromptToHistory = async (
     logger.log("Prompt saved to local history:", newPrompt);
     dispatchPromptGeneratedEvent();
   } catch (error) {
-    console.error("Error saving prompt to history:", error);
+    logger.error("Error saving prompt to history:", error);
   }
 };
 
@@ -44,7 +43,7 @@ export const getHistory = async (): Promise<GeneratedPrompt[]> => {
     logger.log("Retrieved history from localStorage:", history);
     return history;
   } catch (error) {
-    console.error("Error retrieving history:", error);
+    logger.error("Error retrieving history:", error);
     return [];
   }
 };
@@ -59,7 +58,7 @@ export const deleteFromHistory = async (id: string): Promise<void> => {
     const updatedHistory = history.filter((item: GeneratedPrompt) => item.id !== id);
     localStorage.setItem('promptHistory', JSON.stringify(updatedHistory));
   } catch (error) {
-    console.error("Error deleting from history:", error);
+    logger.error("Error deleting from history:", error);
   }
 };
 
@@ -71,6 +70,6 @@ export const clearHistory = async (): Promise<void> => {
     // Clear localStorage history
     localStorage.setItem('promptHistory', '[]');
   } catch (error) {
-    console.error("Error clearing history:", error);
+    logger.error("Error clearing history:", error);
   }
 };

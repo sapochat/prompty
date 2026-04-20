@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
+  callOpenAICompatibleChat,
   fetchWithTimeout,
   generateCacheKey,
-  getCachedResult,
-  setCacheResult,
+  getCachedPrompt,
+  setCachedPrompt,
   isCacheValid,
   handleApiError,
   createErrorResponse,
@@ -13,8 +14,8 @@ import {
   cleanPromptText,
   CACHE_EXPIRY,
   DEFAULT_TIMEOUT,
-  CacheEntry,
 } from '../apiUtils';
+import { queryClient } from '@/lib/queryClient';
 
 // Mock dependencies
 vi.mock('sonner', () => ({
@@ -22,10 +23,6 @@ vi.mock('sonner', () => ({
     success: vi.fn(),
     error: vi.fn(),
   },
-}));
-
-vi.mock('uuid', () => ({
-  v4: () => 'test-uuid-1234',
 }));
 
 vi.mock('@/utils/logger', () => ({
@@ -80,11 +77,12 @@ describe('apiUtils', () => {
       );
 
       const fetchPromise = fetchWithTimeout('https://api.example.com', {}, 100);
+      // Attach rejection handler BEFORE advancing timers so the rejection is
+      // never momentarily unhandled.
+      const assertion = expect(fetchPromise).rejects.toThrow('Request timed out. Please try again.');
 
-      // Advance timers past the timeout
       await vi.advanceTimersByTimeAsync(150);
-
-      await expect(fetchPromise).rejects.toThrow('Request timed out. Please try again.');
+      await assertion;
     });
 
     it('should use default timeout when not specified', async () => {
@@ -185,30 +183,35 @@ describe('apiUtils', () => {
     });
   });
 
-  describe('getCachedResult / setCacheResult', () => {
-    it('should return null for empty cache', () => {
-      const cache = new Map<string, CacheEntry>();
-      const result = getCachedResult(cache, 'nonexistent-key');
-      expect(result).toBeNull();
+  describe('getCachedPrompt / setCachedPrompt', () => {
+    beforeEach(() => {
+      queryClient.clear();
     });
 
-    it('should return cached prompt for valid entry', () => {
-      const cache = new Map<string, CacheEntry>();
-      setCacheResult(cache, 'test-key', 'cached prompt');
-
-      const result = getCachedResult(cache, 'test-key');
-      expect(result).toBe('cached prompt');
+    it('should return null when no entry has been written', () => {
+      expect(getCachedPrompt('openai', 'nonexistent-key')).toBeNull();
     });
 
-    it('should return null for expired cache entry', () => {
-      const cache = new Map<string, CacheEntry>();
-      cache.set('test-key', {
+    it('should round-trip a stored prompt for the same provider+key', () => {
+      setCachedPrompt('openai', 'test-key', 'cached prompt');
+      expect(getCachedPrompt('openai', 'test-key')).toBe('cached prompt');
+    });
+
+    it('should isolate entries across providers', () => {
+      setCachedPrompt('openai', 'shared-key', 'openai prompt');
+      setCachedPrompt('anthropic', 'shared-key', 'anthropic prompt');
+      expect(getCachedPrompt('openai', 'shared-key')).toBe('openai prompt');
+      expect(getCachedPrompt('anthropic', 'shared-key')).toBe('anthropic prompt');
+    });
+
+    it('should return null for an expired entry', () => {
+      // Stamp an entry older than the TTL by writing directly to the
+      // QueryClient cache with a stale timestamp.
+      queryClient.setQueryData(['prompt', 'openai', 'test-key'], {
         prompt: 'old prompt',
         timestamp: Date.now() - CACHE_EXPIRY - 1000,
       });
-
-      const result = getCachedResult(cache, 'test-key');
-      expect(result).toBeNull();
+      expect(getCachedPrompt('openai', 'test-key')).toBeNull();
     });
   });
 
@@ -218,7 +221,7 @@ describe('apiUtils', () => {
       const result = handleApiError(error, 'TestProvider');
 
       expect(result).toEqual({
-        id: 'test-uuid-1234',
+        id: expect.any(String),
         prompt: '',
         error: 'TestProvider: API failed',
       });
@@ -228,7 +231,7 @@ describe('apiUtils', () => {
       const result = handleApiError('Something went wrong', 'TestProvider');
 
       expect(result).toEqual({
-        id: 'test-uuid-1234',
+        id: expect.any(String),
         prompt: '',
         error: 'TestProvider: Something went wrong',
       });
@@ -238,7 +241,7 @@ describe('apiUtils', () => {
       const result = handleApiError({ weird: 'object' }, 'TestProvider');
 
       expect(result).toEqual({
-        id: 'test-uuid-1234',
+        id: expect.any(String),
         prompt: '',
         error: 'TestProvider: Unknown error occurred',
       });
@@ -250,7 +253,7 @@ describe('apiUtils', () => {
       const result = createErrorResponse('OpenAI', 'Rate limited');
 
       expect(result).toEqual({
-        id: 'test-uuid-1234',
+        id: expect.any(String),
         prompt: '',
         error: 'OpenAI: Rate limited',
       });
@@ -262,7 +265,7 @@ describe('apiUtils', () => {
       const result = createSuccessResponse('Generated prompt text');
 
       expect(result).toEqual({
-        id: 'test-uuid-1234',
+        id: expect.any(String),
         prompt: 'Generated prompt text',
       });
     });
@@ -273,7 +276,7 @@ describe('apiUtils', () => {
       const result = createCachedResponse('Cached prompt text');
 
       expect(result).toEqual({
-        id: 'test-uuid-1234',
+        id: expect.any(String),
         prompt: 'Cached prompt text',
       });
     });
@@ -283,10 +286,76 @@ describe('apiUtils', () => {
     it('should create missing key error response', () => {
       const result = createMissingKeyResponse('Anthropic');
 
-      expect(result.id).toBe('test-uuid-1234');
+      expect(result.id).toEqual(expect.any(String));
       expect(result.prompt).toBe('');
       expect(result.error).toContain('Anthropic');
       expect(result.error).toContain('API key');
+    });
+  });
+
+  describe('callOpenAICompatibleChat', () => {
+    const baseOptions = {
+      endpoint: 'https://api.example.com/v1/chat/completions',
+      apiKey: 'test-key',
+      model: 'test-model',
+      systemPrompt: 'sys',
+      userPrompt: 'user',
+      providerLabel: 'TestProvider',
+    };
+
+    it('returns cleaned assistant content on success', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue(
+          new Response(
+            JSON.stringify({ choices: [{ message: { content: '  Prompt: hello world  ' } }] }),
+            { status: 200 }
+          )
+        )
+      );
+      const result = await callOpenAICompatibleChat(baseOptions);
+      expect(result).toBe('hello world');
+    });
+
+    it('sends model, messages, and bearer auth in the request', async () => {
+      const fetchSpy = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ choices: [{ message: { content: 'ok' } }] }), { status: 200 })
+      );
+      vi.stubGlobal('fetch', fetchSpy);
+
+      await callOpenAICompatibleChat({ ...baseOptions, extraHeaders: { 'X-Title': 'Prompty' } });
+
+      const [, init] = fetchSpy.mock.calls[0];
+      expect(init.headers.Authorization).toBe('Bearer test-key');
+      expect(init.headers['X-Title']).toBe('Prompty');
+      const body = JSON.parse(init.body as string);
+      expect(body.model).toBe('test-model');
+      expect(body.messages).toEqual([
+        { role: 'system', content: 'sys' },
+        { role: 'user', content: 'user' },
+      ]);
+    });
+
+    it('throws a labelled error with a parsed detail when the API returns non-200', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue(
+          new Response(JSON.stringify({ error: { message: 'rate limited' } }), { status: 429 })
+        )
+      );
+      await expect(callOpenAICompatibleChat(baseOptions)).rejects.toThrow(
+        'TestProvider API error: rate limited'
+      );
+    });
+
+    it('throws when choices array is empty or malformed', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue(new Response(JSON.stringify({ choices: [] }), { status: 200 }))
+      );
+      await expect(callOpenAICompatibleChat(baseOptions)).rejects.toThrow(
+        'Invalid response from TestProvider API'
+      );
     });
   });
 

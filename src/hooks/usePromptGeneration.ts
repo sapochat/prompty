@@ -6,6 +6,7 @@ import { Category, PromptConfig, PromptConfigWithCategories } from '@/types/prom
 import { toast } from 'sonner';
 import { availableModels } from '@/services/modelService';
 import { getErrorMessage } from '@/utils/errorUtils';
+import { logger } from '@/utils/logger';
 
 /**
  * Hook for handling prompt generation with loading state and robust error handling.
@@ -94,7 +95,7 @@ export const usePromptGeneration = () => {
         toast.error(`Failed to generate prompt: ${message}`);
       }
 
-      console.error("Error in handleGeneratePrompt:", error);
+      logger.error("Error in handleGeneratePrompt:", error);
       return null;
     } finally {
       setGenerating(false);

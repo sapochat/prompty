@@ -5,11 +5,10 @@ A locally-runnable AI prompt generator with secure API key management.
 ## Features
 
 - Generate AI prompts for various models (OpenAI, Anthropic, HuggingFace, Novita, OpenRouter)
-- Local storage of API keys (never sent to any server)
+- Local storage of API keys (never sent to any server other than the chosen provider)
 - Customizable prompt categories and parameters
 - Prompt history management
 - Batch prompt generation
-- Works completely offline (except for API calls to model providers)
 - No user accounts or authentication needed
 
 ## How It Works
@@ -27,13 +26,13 @@ All data is stored locally in your browser - your API are only used to authentic
 Each provider offers a tiered selection of models (fast, balanced, powerful).
 
 ### OpenAI
-- **Models**: GPT-4.1 Mini (fast), GPT-5.1 (balanced), GPT-5.2 (powerful)
+- **Models**: GPT-5.4 Nano (fast), GPT-5.4 Mini (balanced), GPT-5.4 (powerful)
 - **API Key**: [Get your OpenAI API key](https://platform.openai.com/api-keys)
 - **Pricing**: [OpenAI pricing information](https://openai.com/pricing)
 - **Best for**: High-quality, coherent, and reliable prompts
 
 ### Anthropic
-- **Models**: Claude 4.5 Haiku (fast), Claude 4.5 Sonnet (balanced), Claude 4.5 Opus (powerful)
+- **Models**: Claude Haiku 4.5 (fast), Claude Sonnet 4.6 (balanced), Claude Opus 4.7 (powerful)
 - **API Key**: [Get your Anthropic API key](https://console.anthropic.com/account/keys)
 - **Pricing**: [Anthropic pricing information](https://www.anthropic.com/pricing)
 - **Best for**: Detailed, nuanced prompts with creative elements
@@ -51,7 +50,7 @@ Each provider offers a tiered selection of models (fast, balanced, powerful).
 - **Best for**: Cost-effective access to Llama models
 
 ### OpenRouter
-- **Models**: Gemini 2.5 Flash (fast), Gemini 3 Flash (balanced), Gemini 3 Pro (powerful)
+- **Models**: Gemini 3 Flash (fast), Gemini 3 Pro (balanced), Gemini 3.1 Pro (powerful)
 - **API Key**: [Get your OpenRouter API key](https://openrouter.ai/keys)
 - **Pricing**: [OpenRouter pricing information](https://openrouter.ai/pricing)
 - **Best for**: Flexibility to access multiple models through a single API

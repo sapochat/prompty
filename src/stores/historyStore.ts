@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { GeneratedPrompt, PromptConfig } from '@/types/prompt';
-import { v4 as uuidv4 } from 'uuid';
 
 interface HistoryState {
   history: GeneratedPrompt[];
@@ -19,7 +18,7 @@ export const useHistoryStore = create<HistoryState>()(
       addPrompt: (prompt, config, modelUsed, batchId) => set((state) => ({
         history: [
           {
-            id: uuidv4(),
+            id: crypto.randomUUID(),
             prompt,
             config,
             timestamp: Date.now(),

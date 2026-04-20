@@ -12,44 +12,44 @@ import { logger } from '@/utils/logger';
 export const availableModels: AIModel[] = [
   // OpenAI models
   {
-    id: 'gpt-4.1-mini',
-    name: 'GPT-4.1 Mini',
+    id: 'gpt-5.4-nano',
+    name: 'GPT-5.4 Nano',
     provider: 'openai',
     description: 'Fast and efficient for quick tasks.',
     requiresApiKey: true,
   },
   {
-    id: 'gpt-5.1',
-    name: 'GPT-5.1',
+    id: 'gpt-5.4-mini',
+    name: 'GPT-5.4 Mini',
     provider: 'openai',
     description: 'Balanced performance for most tasks.',
     requiresApiKey: true,
   },
   {
-    id: 'gpt-5.2',
-    name: 'GPT-5.2',
+    id: 'gpt-5.4',
+    name: 'GPT-5.4',
     provider: 'openai',
     description: 'Most capable model for complex tasks.',
     requiresApiKey: true,
   },
   // Anthropic models
   {
-    id: 'claude-4-5-haiku-latest',
-    name: 'Claude 4.5 Haiku',
+    id: 'claude-haiku-4-5',
+    name: 'Claude Haiku 4.5',
     provider: 'anthropic',
     description: 'Fastest Claude model for quick responses.',
     requiresApiKey: true,
   },
   {
-    id: 'claude-4-5-sonnet-latest',
-    name: 'Claude 4.5 Sonnet',
+    id: 'claude-sonnet-4-6',
+    name: 'Claude Sonnet 4.6',
     provider: 'anthropic',
     description: 'Balanced intelligence and speed.',
     requiresApiKey: true,
   },
   {
-    id: 'claude-4-5-opus-latest',
-    name: 'Claude 4.5 Opus',
+    id: 'claude-opus-4-7',
+    name: 'Claude Opus 4.7',
     provider: 'anthropic',
     description: 'Most intelligent Claude model.',
     requiresApiKey: true,
@@ -100,22 +100,22 @@ export const availableModels: AIModel[] = [
   },
   // OpenRouter models
   {
-    id: 'google/gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash',
+    id: 'google/gemini-3-flash-preview',
+    name: 'Gemini 3 Flash',
     provider: 'openrouter',
     description: 'Fast Google model.',
     requiresApiKey: true,
   },
   {
-    id: 'google/gemini-3-flash-preview',
-    name: 'Gemini 3 Flash',
+    id: 'google/gemini-3-pro-preview',
+    name: 'Gemini 3 Pro',
     provider: 'openrouter',
-    description: 'Latest balanced Gemini.',
+    description: 'Balanced Gemini model.',
     requiresApiKey: true,
   },
   {
-    id: 'google/gemini-3-pro-preview',
-    name: 'Gemini 3 Pro',
+    id: 'google/gemini-3.1-pro-preview',
+    name: 'Gemini 3.1 Pro',
     provider: 'openrouter',
     description: 'Most capable Gemini model.',
     requiresApiKey: true,
@@ -134,7 +134,7 @@ const getEnabledModels = async (): Promise<string[]> => {
     // By default, enable all models
     return availableModels.map(model => model.id);
   } catch (error) {
-    console.error("Error getting enabled models:", error);
+    logger.error("Error getting enabled models:", error);
     return availableModels.map(model => model.id);
   }
 };
@@ -182,7 +182,7 @@ export const saveEnabledModels = async (modelIds: string[]): Promise<void> => {
   try {
     localStorage.setItem('enabledModels', JSON.stringify(modelIds));
   } catch (error) {
-    console.error("Error saving enabled models:", error);
+    logger.error("Error saving enabled models:", error);
   }
 };
 

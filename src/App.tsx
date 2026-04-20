@@ -2,28 +2,16 @@ import React, { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Spinner } from "@/components/ui/spinner";
+import { queryClient } from "@/lib/queryClient";
 
 // Lazy load route components for code splitting
 const Index = lazy(() => import("./pages/Index"));
 const PromptExplorer = lazy(() => import("./pages/PromptExplorer"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-    mutations: {
-      retry: 1,
-    },
-  },
-});
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center">

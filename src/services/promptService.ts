@@ -1,4 +1,4 @@
-import { AIModel, ApiResponse, PromptConfig, PromptConfigWithCategories, Category } from '@/types/prompt';
+import { ApiResponse, PromptConfig, PromptConfigWithCategories, Category } from '@/types/prompt';
 import { dispatchPromptGeneratedEvent } from "@/hooks/usePromptHistory";
 import { getAvailableModels, availableModels, saveEnabledModels } from './modelService';
 import { generateOpenAIPrompt, saveApiKey as saveOpenAIApiKey, getApiKey as getOpenAIApiKey } from './api/openaiService';
@@ -7,8 +7,6 @@ import { generateHuggingfacePrompt, saveApiKey as saveHuggingfaceApiKey, getApiK
 import { generateNovitaPrompt, saveApiKey as saveNovitaApiKey, getApiKey as getNovitaApiKey } from './api/novitaService';
 import { generateOpenRouterPrompt, saveApiKey as saveOpenRouterApiKey, getApiKey as getOpenRouterApiKey } from './api/openrouterService';
 import { getHistory, deleteFromHistory, clearHistory, savePromptToHistory } from './promptHistoryService';
-import { getDefaultConfig } from '@/components/category/CategoryUtils';
-import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/utils/logger';
 
 // Re-export all the functions and constants for backward compatibility
@@ -79,7 +77,7 @@ export const saveEnabledProviders = async (providers: string[]): Promise<void> =
   try {
     localStorage.setItem('enabledProviders', JSON.stringify(providers));
   } catch (error) {
-    console.error("Error saving enabled providers:", error);
+    logger.error("Error saving enabled providers:", error);
   }
 };
 
@@ -94,7 +92,7 @@ export const generatePrompt = async (
   const model = availableModels.find(m => m.id === config.model);
 
   if (!model) {
-    console.error("Model not found");
+    logger.error("Model not found");
     return null;
   }
 
@@ -108,7 +106,7 @@ export const generatePrompt = async (
   // Log the categories to verify they're being passed correctly
   logger.log(`Generating prompt with model ${model.provider} (${model.id}) and ${enhancedConfig.promptCategories?.length || 0} categories`);
 
-  const batchId = count > 1 ? uuidv4() : undefined;
+  const batchId = count > 1 ? crypto.randomUUID() : undefined;
   const results: ApiResponse[] = [];
 
   for (let i = 0; i < count; i++) {
@@ -139,7 +137,7 @@ export const generatePrompt = async (
     } else if (model.provider === 'openrouter') {
       result = await generateOpenRouterPrompt(batchConfig);
     } else {
-      console.error("Provider not supported");
+      logger.error("Provider not supported");
       continue;
     }
 
@@ -172,7 +170,7 @@ export const getUserTheme = async (): Promise<string> => {
   try {
     return localStorage.getItem('theme') || 'system';
   } catch (error) {
-    console.error("Error retrieving theme:", error);
+    logger.error("Error retrieving theme:", error);
     return 'system';
   }
 };
@@ -184,7 +182,7 @@ export const saveUserTheme = async (theme: string): Promise<void> => {
   try {
     localStorage.setItem('theme', theme);
   } catch (error) {
-    console.error("Error saving theme:", error);
+    logger.error("Error saving theme:", error);
   }
 };
 
@@ -210,7 +208,7 @@ export const getUserConfig = async (): Promise<PromptConfig | null> => {
     // Return null if no config found
     return null;
   } catch (error) {
-    console.error("Error retrieving user config:", error);
+    logger.error("Error retrieving user config:", error);
     return null;
   }
 };
@@ -222,6 +220,6 @@ export const saveUserConfig = async (config: PromptConfig): Promise<void> => {
   try {
     localStorage.setItem('userConfig', JSON.stringify(config));
   } catch (error) {
-    console.error("Error saving user config:", error);
+    logger.error("Error saving user config:", error);
   }
 };
